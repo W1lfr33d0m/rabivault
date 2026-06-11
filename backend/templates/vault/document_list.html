@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Documents</h1>
+
+<div class="card">
+    <form method="get">
+        <input type="text" name="q" placeholder="Search title..." value="{{ query }}">
+        <select name="type">
+            <option value="">All types</option>
+            <option value="license">License</option>
+            <option value="policy">Policy</option>
+            <option value="inspection">Inspection</option>
+            <option value="equipment">Equipment</option>
+            <option value="contract">Contract</option>
+            <option value="invoice">Invoice</option>
+            <option value="training">Training</option>
+            <option value="report">Report</option>
+            <option value="other">Other</option>
+        </select>
+        <button type="submit">Search</button>
+    </form>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Facility</th>
+            <th>Uploaded</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for document in documents %}
+            <tr>
+                <td>
+                    <a href="{% url 'vault:document_detail' document.public_id %}">
+                        {{ document.title }}
+                    </a>
+                </td>
+                <td>{{ document.document_type }}</td>
+                <td>{{ document.facility|default:"Organization-level" }}</td>
+                <td>{{ document.created_at }}</td>
+                <td>{{ document.status }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="5">No documents found.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RabiVault</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background: #f7f7f7;
+        }
+
+        nav {
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+        }
+
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        input, select, textarea {
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+
+        button, .button {
+            padding: 0.5rem 1rem;
+            background: #1f6feb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .danger {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <strong>RabiVault</strong> |
+        <a href="{% url 'vault:dashboard' %}">Dashboard</a> |
+        <a href="{% url 'vault:document_list' %}">Documents</a> |
+        <a href="{% url 'vault:document_upload' %}">Upload</a> |
+        <a href="{% url 'audit:audit_log_list' %}">Audit Logs</a> |
+
+        {% if user.is_authenticated %}
+            <span>Logged in as {{ user.username }}</span> |
+            <a href="{% url 'logout' %}">Logout</a>
+        {% endif %}
+    </nav>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="card">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</body>
+</html>
+Create:
+backend/templates/auth/login.html
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h1>RabiVault Login</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit">Login</button>
+    </form>
+</div>
+{% endblock %}

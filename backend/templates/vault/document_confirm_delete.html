@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <h1>Delete Document</h1>
+
+    <p>Are you sure you want to delete {{ document.title }}?</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <button class="danger" type="submit">Yes, delete</button>
+        <a href="{% url 'vault:document_detail' document.public_id %}">Cancel</a>
+    </form>
+</div>
+{% endblock %}
