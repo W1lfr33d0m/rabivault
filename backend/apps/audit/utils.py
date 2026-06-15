@@ -1,3 +1,5 @@
+import hashlib
+import json
 from .models import AuditLog
 
 
@@ -20,6 +22,11 @@ def get_user_organization(user):
         return None
 
     return profile.organization
+
+
+def calculate_audit_hash(data, previous_hash=""):
+    payload = json.dumps(data, sort_keys=True, default=str)
+    return hashlib.sha256((previous_hash + payload).encode()).hexdigest()
 
 
 def write_audit_log(
@@ -47,6 +54,22 @@ def write_audit_log(
         ip_address = get_client_ip(request)
         user_agent = request.META.get("HTTP_USER_AGENT", "")
 
+    previous_log = AuditLog.objects.order_by("-created_at").first()
+    previous_hash = previous_log.current_hash if previous_log else ""
+
+    hash_data = {
+        "organization_id": organization.id if organization else None,
+        "actor_id": actor.id if actor else None,
+        "action": action,
+        "object_type": object_type,
+        "object_id": str(object_id) if object_id else "",
+        "ip_address": ip_address,
+        "user_agent": user_agent,
+        "metadata": metadata,
+    }
+
+    current_hash = calculate_audit_hash(hash_data, previous_hash)
+
     return AuditLog.objects.create(
         organization=organization,
         actor=actor,
@@ -56,4 +79,6 @@ def write_audit_log(
         ip_address=ip_address,
         user_agent=user_agent,
         metadata=metadata,
+        previous_hash=previous_hash,
+        current_hash=current_hash,
     )

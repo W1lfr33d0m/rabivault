@@ -46,6 +46,10 @@ class AuditLog(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    previous_hash = models.CharField(max_length=64, blank=True)
+    
+    current_hash = models.CharField(max_length=64, blank=True)
+
     class Meta:
         ordering = ["-created_at"]
         indexes = [
@@ -56,3 +60,47 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.action} by {self.actor} at {self.created_at}"
+
+class SecurityEvent(models.Model):
+    SEVERITY_CHOICES = [
+        ("low", "Low"),
+        ("medium", "Medium"),
+        ("high", "High"),
+        ("critical", "Critical"),
+    ]
+
+    organization = models.ForeignKey(
+        Organization,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="security_events"
+    )
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="security_events"
+    )
+
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
+    event_type = models.CharField(max_length=100)
+    description = models.TextField()
+    metadata = models.JSONField(default=dict, blank=True)
+    resolved = models.BooleanField(default=False)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["organization", "created_at"]),
+            models.Index(fields=["severity", "created_at"]),
+            models.Index(fields=["event_type", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.severity} - {self.event_type}"

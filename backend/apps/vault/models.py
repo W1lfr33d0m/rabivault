@@ -192,3 +192,44 @@ class DocumentVersion(models.Model):
 
     def __str__(self):
         return f"{self.document.title} v{self.version}"
+
+class DocumentShare(models.Model):
+    PERMISSION_CHOICES = [
+        ("view", "View"),
+        ("download", "Download"),
+        ("manage", "Manage"),
+    ]
+
+    document = models.ForeignKey(
+        Document,
+        on_delete=models.CASCADE,
+        related_name="shares"
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="document_shares"
+    )
+
+    permission = models.CharField(max_length=20, choices=PERMISSION_CHOICES)
+
+    granted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="granted_document_shares"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("document", "user", "permission")
+        indexes = [
+            models.Index(fields=["document", "user"]),
+            models.Index(fields=["permission"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.document} - {self.permission}"

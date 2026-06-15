@@ -1,3 +1,12 @@
+from .models import DocumentShare
+
+def user_has_document_share(user, document, permission):
+    return DocumentShare.objects.filter(
+        user=user,
+        document=document,
+        permission=permission,
+    ).exists()
+
 def get_user_profile(user):
     return getattr(user, "profile", None)
 
@@ -56,11 +65,19 @@ def user_can_view_document(user, document):
     if profile.role in ["org_admin", "auditor"]:
         return True
 
+    if user_has_document_share(user, document, "view"):
+        return True
+
+    if user_has_document_share(user, document, "download"):
+        return True
+
+    if user_has_document_share(user, document, "manage"):
+        return True
+
     if document.facility_id:
         return profile.facilities.filter(id=document.facility_id).exists()
 
     return profile.role in ["facility_manager", "staff", "external_reviewer"]
-
 
 def user_can_upload_document(user, organization, facility=None):
     if not user.is_authenticated:
@@ -84,6 +101,19 @@ def user_can_upload_document(user, organization, facility=None):
 
     return False
 
+def user_can_download_document(user, document):
+    if not user_can_view_document(user, document):
+        return False
+
+    profile = get_user_profile(user)
+
+    if profile.role in ["platform_admin", "org_admin", "facility_manager", "auditor"]:
+        return True
+
+    return (
+        user_has_document_share(user, document, "download") or
+        user_has_document_share(user, document, "manage")
+    )
 
 def documents_for_user(user):
     from .models import Document

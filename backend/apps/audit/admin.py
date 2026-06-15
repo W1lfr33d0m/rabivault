@@ -31,6 +31,8 @@ class AuditLogAdmin(admin.ModelAdmin):
         "user_agent",
         "metadata",
         "created_at",
+        "previous_hash",
+        "current_hash",
     )
 
     def has_add_permission(self, request):
