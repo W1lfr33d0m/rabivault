@@ -1,11 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import render
-
+from apps.accounts.decorators import mfa_required
+from django_ratelimit.decorators import ratelimit
 from .models import AuditLog
 
 
 @login_required
+@mfa_required
+@ratelimit(key="user", rate="30/h", block=True)
 def audit_log_list(request):
     profile = request.user.profile
 

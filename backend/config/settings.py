@@ -42,6 +42,10 @@ INSTALLED_APPS = [
     "apps.organizations",
     "apps.vault",
     "apps.audit.apps.AuditConfig",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
+    "apps.backups",
+    "apps.compliance",
 ]
 
 MIDDLEWARE = [
@@ -50,6 +54,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
 
     "apps.audit.middleware.RequestAuditMiddleware",
 
@@ -125,6 +130,10 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
+
+#CLAMAV CONFIG
+CLAMAV_HOST = env("CLAMAV_HOST", default="clamav")
+CLAMAV_PORT = env.int("CLAMAV_PORT", default=3310)
 
 # Celery
 CELERY_BROKER_URL = "redis://redis:6379/0"

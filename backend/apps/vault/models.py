@@ -65,6 +65,22 @@ class Document(models.Model):
         ("other", "Other"),
     ]
 
+    SCAN_STATUS_CHOICES = [
+    ("pending", "Pending"),
+    ("clean", "Clean"),
+    ("infected", "Infected"),
+    ("failed", "Failed"),
+    ]
+
+    scan_status = models.CharField(
+    max_length=20,
+    choices=SCAN_STATUS_CHOICES,
+    default="pending",
+)
+
+    scan_result = models.TextField(blank=True)
+    scanned_at = models.DateTimeField(null=True, blank=True)
+
     public_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     organization = models.ForeignKey(

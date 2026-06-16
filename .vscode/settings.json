@@ -1,0 +1,5 @@
+{
+    "workbench.settings.openDefaultSettings": true,
+    "python.envFile": "${workspaceFolder}/.env",
+    "python.terminal.useEnvFile": true
+}

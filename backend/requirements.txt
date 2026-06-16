@@ -8,3 +8,7 @@ redis==5.0.4
 django-environ==0.11.2
 django-guardian==2.4.0
 django-filter==24.2
+pyclamd==0.4.0
+django-otp==1.5.4
+qrcode==7.4.2
+django-ratelimit==4.1.0

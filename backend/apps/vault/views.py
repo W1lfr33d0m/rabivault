@@ -6,15 +6,23 @@ from django.contrib import messages
 from django.utils import timezone
 
 from apps.audit.utils import write_audit_log
+from apps.accounts.decorators import mfa_required
 from apps.organizations.models import Organization, Facility
 from .forms import DocumentUploadForm
 from .models import Document, VaultFolder
 from .permissions import (
     documents_for_user,
+    user_can_download_document,
     user_can_view_document,
     user_can_upload_document,
 )
-from .utils import calculate_sha256
+from django.shortcuts import redirect
+from .utils import calculate_sha256, generate_presigned_download_url
+from .permissions import user_can_download_document
+from .tasks import scan_document_for_virus
+from django_ratelimit.decorators import ratelimit
+from apps.compliance.utils import organization_has_active_baa
+
 
 
 @login_required
@@ -76,16 +84,28 @@ def document_detail(request, public_id):
 
 
 @login_required
+@mfa_required
+@ratelimit(key="user", rate="30/h", block=True)
 def document_upload(request):
     profile = request.user.profile
 
+    """"
     if profile.role == "platform_admin":
         organization = Organization.objects.first()
     else:
         organization = profile.organization
+    """
+
+    if profile.role == "platform_admin":
+        messages.error(request, "Platform admins must select an organization before uploading.")
+        return redirect("vault:document_list")
 
     if not organization:
         messages.error(request, "Your user is not assigned to an organization.")
+        return redirect("vault:document_list")
+    
+    if not organization_has_active_baa(organization):
+        messages.error(request, "A signed Business Associate Agreement is required before uploading PHI.")
         return redirect("vault:document_list")
 
     if request.method == "POST":
@@ -106,6 +126,7 @@ def document_upload(request):
 
             document.checksum_sha256 = calculate_sha256(document.file)
             document.save()
+            scan_document_for_virus.delay(document.id)
 
             write_audit_log(
                 request=request,
@@ -138,31 +159,34 @@ def document_upload(request):
 
 
 @login_required
+@mfa_required
+@ratelimit(key="user", rate="30/h", block=True)
 def document_download(request, public_id):
     document = get_object_or_404(Document, public_id=public_id, status="active")
 
-    if not user_can_view_document(request.user, document):
-        raise PermissionDenied("You do not have access to this document.")
+    if not user_can_download_document(request.user, document):
+        raise PermissionDenied("You do not have permission to download this document.")
+
+    if document.scan_status != "clean":
+        raise PermissionDenied("This document is not available for download until antivirus scanning is complete.")
+
+    signed_url = generate_presigned_download_url(document, expires_in=300)
 
     write_audit_log(
         request=request,
         action="download_document",
         object_type="Document",
         object_id=document.public_id,
-        metadata={"title": document.title}
+        metadata={
+            "title": document.title,
+            "signed_url_expires_seconds": 300,
+        }
     )
 
-    try:
-        return FileResponse(
-            document.file.open("rb"),
-            as_attachment=True,
-            filename=document.original_filename or document.file.name
-        )
-    except FileNotFoundError:
-        raise Http404("File not found.")
-
+    return redirect(signed_url)
 
 @login_required
+@mfa_required
 def document_delete(request, public_id):
     document = get_object_or_404(Document, public_id=public_id)
 
