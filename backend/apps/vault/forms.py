@@ -1,3 +1,4 @@
+import os
 from django import forms
 from .models import Document, VaultFolder
 
@@ -11,7 +12,7 @@ ALLOWED_CONTENT_TYPES = [
     "text/plain",
 ]
 
-MAX_FILE_SIZE_MB = 25
+MAX_FILE_SIZE_MB = 500
 
 
 class DocumentUploadForm(forms.ModelForm):
@@ -34,13 +35,14 @@ class DocumentUploadForm(forms.ModelForm):
         if uploaded_file.size > MAX_FILE_SIZE_MB * 1024 * 1024:
             raise forms.ValidationError(f"File must be under {MAX_FILE_SIZE_MB} MB.")
 
-        content_type = getattr(uploaded_file, "content_type", "")
+        allowed_extensions = [".pdf", ".jpg", ".jpeg", ".png", ".docx", ".xlsx", ".txt", ".dcm", ".dicom", ".zip"]
 
-        if content_type not in ALLOWED_CONTENT_TYPES:
+        ext = os.path.splitext(uploaded_file.name)[1].lower()
+
+        if ext not in allowed_extensions:
             raise forms.ValidationError("This file type is not allowed.")
 
         return uploaded_file
-
 
 class VaultFolderForm(forms.ModelForm):
     class Meta:

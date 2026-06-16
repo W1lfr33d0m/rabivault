@@ -1,3 +1,5 @@
+import profile
+
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import FileResponse, Http404
@@ -22,7 +24,6 @@ from .permissions import user_can_download_document
 from .tasks import scan_document_for_virus
 from django_ratelimit.decorators import ratelimit
 from apps.compliance.utils import organization_has_active_baa
-
 
 
 @login_required
@@ -89,16 +90,11 @@ def document_detail(request, public_id):
 def document_upload(request):
     profile = request.user.profile
 
-    """"
-    if profile.role == "platform_admin":
-        organization = Organization.objects.first()
-    else:
-        organization = profile.organization
-    """
-
     if profile.role == "platform_admin":
         messages.error(request, "Platform admins must select an organization before uploading.")
         return redirect("vault:document_list")
+
+    organization = profile.organization
 
     if not organization:
         messages.error(request, "Your user is not assigned to an organization.")
@@ -126,6 +122,7 @@ def document_upload(request):
 
             document.checksum_sha256 = calculate_sha256(document.file)
             document.save()
+            
             scan_document_for_virus.delay(document.id)
 
             write_audit_log(

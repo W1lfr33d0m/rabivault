@@ -65,6 +65,15 @@ class Document(models.Model):
         ("other", "Other"),
     ]
 
+    DOCUMENT_CATEGORY_CHOICES = [
+        ("general", "General Document"),
+        ("imaging", "Imaging File"),
+        ("dicom", "DICOM"),
+        ("report", "Report"),
+        ("qc", "QC Document"),
+        ("baa", "BAA"),
+    ]
+
     SCAN_STATUS_CHOICES = [
     ("pending", "Pending"),
     ("clean", "Clean"),
@@ -112,6 +121,20 @@ class Document(models.Model):
         choices=DOCUMENT_TYPE_CHOICES,
         default="other"
     )
+
+    document_category = models.CharField(
+        max_length=30,
+        choices=DOCUMENT_CATEGORY_CHOICES,
+        default="general",
+    )
+
+    modality = models.CharField(max_length=30, blank=True)
+    study_date = models.DateField(null=True, blank=True)
+    patient_identifier = models.CharField(max_length=255, blank=True)
+    accession_number = models.CharField(max_length=255, blank=True)
+    study_instance_uid = models.CharField(max_length=255, blank=True)
+
+    
 
     file = models.FileField(upload_to=document_upload_path)
     original_filename = models.CharField(max_length=255, blank=True)

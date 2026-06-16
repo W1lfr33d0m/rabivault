@@ -5,13 +5,27 @@ import pyclamd
 from django.conf import settings
 
 
-def scan_file_with_clamav(file_path):
+"""def scan_file_with_clamav(file_path):
     scanner = pyclamd.ClamdNetworkSocket(
         host=settings.CLAMAV_HOST,
         port=settings.CLAMAV_PORT,
     )
 
     result = scanner.scan_file(file_path)
+
+    if result is not None:
+        return False, result
+
+    return True, None"""
+
+def scan_file_stream_with_clamav(file_obj):
+    scanner = pyclamd.ClamdNetworkSocket(
+        host=getattr(settings, "CLAMAV_HOST", "clamav"),
+        port=getattr(settings, "CLAMAV_PORT", 3310),
+    )
+
+    file_obj.seek(0)
+    result = scanner.instream(file_obj)
 
     if result is not None:
         return False, result

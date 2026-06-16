@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import AuditLog
-
+from .models import AuditLog, SecurityEvent
 
 @admin.register(AuditLog)
 class AuditLogAdmin(admin.ModelAdmin):
@@ -37,3 +36,9 @@ class AuditLogAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+@admin.register(SecurityEvent)
+class SecurityEventAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "organization", "actor", "severity", "event_type", "resolved")
+    list_filter = ("severity", "event_type", "resolved", "created_at")
+    search_fields = ("description", "actor__username", "organization__name")

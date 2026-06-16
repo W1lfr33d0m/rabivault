@@ -13,7 +13,9 @@ def mfa_required(view_func):
         if profile.role in ["platform_admin", "org_admin", "facility_manager", "auditor"]:
             if not profile.mfa_enabled:
                 messages.error(request, "MFA is required for this action.")
-                return redirect("accounts:mfa_setup")
+                messages.error(request, "MFA is required, but MFA setup is not implemented yet.")
+                return redirect("vault:dashboard")
+                #return redirect("accounts:mfa_setup")
 
         return view_func(request, *args, **kwargs)
 

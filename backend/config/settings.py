@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "django_otp.plugins.otp_totp",
     "apps.backups",
     "apps.compliance",
+    "apps.imaging",
 ]
 
 MIDDLEWARE = [
@@ -148,5 +149,5 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_SSL_REDIRECT = False
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024

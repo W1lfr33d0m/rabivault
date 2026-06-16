@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import VaultFolder, Document, DocumentVersion
+from .models import VaultFolder, Document, DocumentVersion, DocumentShare
 
 
 @admin.register(VaultFolder)
@@ -43,3 +43,9 @@ class DocumentAdmin(admin.ModelAdmin):
 class DocumentVersionAdmin(admin.ModelAdmin):
     list_display = ("document", "version", "uploaded_by", "created_at")
     search_fields = ("document__title", "checksum_sha256", "original_filename")
+
+@admin.register(DocumentShare)
+class DocumentShareAdmin(admin.ModelAdmin):
+    list_display = ("document", "user", "permission", "granted_by", "created_at")
+    list_filter = ("permission", "created_at")
+    search_fields = ("document__title", "user__username", "user__email")
