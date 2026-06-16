@@ -1,0 +1,18 @@
+{
+  "Name": "RabiVault Orthanc",
+  "StorageDirectory": "/var/lib/orthanc/db",
+  "IndexDirectory": "/var/lib/orthanc/db",
+
+  "HttpServerEnabled": true,
+  "HttpPort": 8042,
+  "RemoteAccessAllowed": true,
+
+  "AuthenticationEnabled": true,
+  "RegisteredUsers": {
+    "orthanc": "rabivault*2026"
+  },
+
+  "DicomServerEnabled": true,
+  "DicomAet": "RABIVAULT",
+  "DicomPort": 4242
+}
