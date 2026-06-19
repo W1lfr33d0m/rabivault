@@ -91,6 +91,17 @@ services:
       - db
     entrypoint: ["sleep", "infinity"]
 
+  orthanc:
+    image: orthancteam/orthanc
+    container_name: rabivault_orthanc
+    volumes:
+      - rabivault_orthanc_data:/var/lib/orthanc/db
+      - ./orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro
+    ports:
+      - "8042:8042"
+      - "4242:4242"
+
 volumes:
   rabivault_postgres_data:
   rabivault_minio_data:
+  rabivault_orthanc_data:

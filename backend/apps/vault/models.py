@@ -134,7 +134,13 @@ class Document(models.Model):
     accession_number = models.CharField(max_length=255, blank=True)
     study_instance_uid = models.CharField(max_length=255, blank=True)
 
-    
+    related_imaging_study = models.ForeignKey(
+    "imaging.ImagingStudy",
+    on_delete=models.SET_NULL,
+    null=True,
+    blank=True,
+    related_name="documents",
+)
 
     file = models.FileField(upload_to=document_upload_path)
     original_filename = models.CharField(max_length=255, blank=True)
