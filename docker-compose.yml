@@ -94,9 +94,19 @@ services:
   orthanc:
     image: orthancteam/orthanc
     container_name: rabivault_orthanc
+    env_file:
+      - .env
+    environment:
+      ORTHANC__NAME: "RabiVault Orthanc"
+      ORTHANC__AUTHENTICATION_ENABLED: "true"
+      ORTHANC__REGISTERED_USERS: '{"${ORTHANC_USERNAME}":"${ORTHANC_PASSWORD}"}'
+      ORTHANC__REMOTE_ACCESS_ALLOWED: "true"
+      ORTHANC__DICOM_SERVER_ENABLED: "true"
+      ORTHANC__DICOM_AET: "${ORTHANC_AET}"
+      ORTHANC__DICOM_PORT: "4242"
+      ORTHANC__HTTP_PORT: "8042"
     volumes:
       - rabivault_orthanc_data:/var/lib/orthanc/db
-      - ./orthanc/orthanc.json:/etc/orthanc/orthanc.json:ro
     ports:
       - "8042:8042"
       - "4242:4242"
