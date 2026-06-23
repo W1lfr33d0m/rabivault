@@ -1,6 +1,10 @@
 from celery import shared_task
 from django.utils import timezone
 from datetime import timedelta
+
+import tempfile
+from django.core.files.storage import default_storage
+
 from apps.audit.utils import write_audit_log
 from .models import Document
 from .utils import scan_file_stream_with_clamav
