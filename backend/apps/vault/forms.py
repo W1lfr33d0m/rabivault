@@ -9,6 +9,7 @@ ALLOWED_CONTENT_TYPES = [
     "image/png",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "text/plain",
 ]
 
@@ -35,7 +36,23 @@ class DocumentUploadForm(forms.ModelForm):
         if uploaded_file.size > MAX_FILE_SIZE_MB * 1024 * 1024:
             raise forms.ValidationError(f"File must be under {MAX_FILE_SIZE_MB} MB.")
 
-        allowed_extensions = [".pdf", ".jpg", ".jpeg", ".png", ".docx", ".xlsx", ".txt", ".dcm", ".dicom", ".zip"]
+        allowed_extensions = [
+            ".pdf",
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".doc",
+            ".docx",
+            ".xls",
+            ".xlsx",
+            ".ppt",
+            ".pptx",
+            ".txt",
+            ".csv",
+            ".dcm",
+            ".dicom",
+            ".zip",
+            ]
 
         ext = os.path.splitext(uploaded_file.name)[1].lower()
 

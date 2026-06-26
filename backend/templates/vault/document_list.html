@@ -1,55 +1,96 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h1>Documents</h1>
+{% block title %}File Manager · RabiVault{% endblock %}
 
-<div class="card">
-    <form method="get">
-        <input type="text" name="q" placeholder="Search title..." value="{{ query }}">
-        <select name="type">
-            <option value="">All types</option>
-            <option value="license">License</option>
-            <option value="policy">Policy</option>
-            <option value="inspection">Inspection</option>
-            <option value="equipment">Equipment</option>
-            <option value="contract">Contract</option>
-            <option value="invoice">Invoice</option>
-            <option value="training">Training</option>
-            <option value="report">Report</option>
-            <option value="other">Other</option>
-        </select>
-        <button type="submit">Search</button>
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">File manager</p>
+        <h1>Documents</h1>
+        <p class="page-description">Search, filter, open, download, and manage uploaded documents.</p>
+    </div>
+    <div class="actions">
+        <a class="btn" href="{% url 'vault:document_upload' %}">Upload File</a>
+        <a class="btn secondary" href="{% url 'vault:folder_create' %}">New Folder</a>
+    </div>
+</div>
+
+<div class="card flat" style="margin-bottom: 1rem;">
+    <form class="filter-bar" method="get">
+        <div>
+            <label for="q">Search</label>
+            <input id="q" type="text" name="q" placeholder="Search title..." value="{{ query }}">
+        </div>
+
+        <div>
+            <label for="type">Type</label>
+            <select id="type" name="type">
+                <option value="">All types</option>
+                {% for value, label in document_type_choices %}
+                    <option value="{{ value }}" {% if document_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="facility">Facility</label>
+            <select id="facility" name="facility">
+                <option value="">All facilities</option>
+                {% for facility in facilities %}
+                    <option value="{{ facility.id }}" {% if facility_id == facility.id|stringformat:"s" %}selected{% endif %}>{{ facility.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="folder">Folder</label>
+            <select id="folder" name="folder">
+                <option value="">All folders</option>
+                {% for folder in folders %}
+                    <option value="{{ folder.id }}" {% if folder_id == folder.id|stringformat:"s" %}selected{% endif %}>{{ folder.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Filter</button>
     </form>
 </div>
 
-<table>
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Type</th>
-            <th>Facility</th>
-            <th>Uploaded</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for document in documents %}
-            <tr>
-                <td>
-                    <a href="{% url 'vault:document_detail' document.public_id %}">
-                        {{ document.title }}
-                    </a>
-                </td>
-                <td>{{ document.document_type }}</td>
-                <td>{{ document.facility|default:"Organization-level" }}</td>
-                <td>{{ document.created_at }}</td>
-                <td>{{ document.status }}</td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="5">No documents found.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Document</th>
+                    <th>Type</th>
+                    <th>Facility</th>
+                    <th>Folder</th>
+                    <th>Scan</th>
+                    <th>Status</th>
+                    <th>Uploaded</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for document in documents %}
+                    <tr>
+                        <td>
+                            <a class="document-title" href="{% url 'vault:document_detail' document.public_id %}">{{ document.title }}</a><br>
+                            <span class="muted">{{ document.original_filename|default:"No filename" }}</span>
+                        </td>
+                        <td>{{ document.get_document_type_display }}</td>
+                        <td>{{ document.facility|default:"Organization-level" }}</td>
+                        <td>{{ document.folder|default:"No folder" }}</td>
+                        <td><span class="badge {{ document.scan_status }}">{{ document.get_scan_status_display }}</span></td>
+                        <td><span class="badge {{ document.status }}">{{ document.get_status_display }}</span></td>
+                        <td>{{ document.created_at|date:"M j, Y g:i A" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="empty-state">No documents found. Try clearing filters or upload a new file.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

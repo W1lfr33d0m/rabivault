@@ -1,29 +1,73 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h1>RabiVault Medical Data Vault</h1>
+{% block title %}Dashboard · RabiVault{% endblock %}
 
-<div class="card">
-    <h2>Dashboard</h2>
-    <p>Total documents: {{ total_documents }}</p>
-    <p>Expired documents: {{ expired_documents }}</p>
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Dashboard</p>
+        <h1>Medical Data Vault</h1>
+        <p class="page-description">Track uploaded files, review scan status, and access recent documents from your organization.</p>
+    </div>
+    <div class="actions">
+        <a class="btn" href="{% url 'vault:document_upload' %}">Upload File</a>
+        <a class="btn secondary" href="{% url 'vault:document_list' %}">Open File Manager</a>
+    </div>
+</div>
+
+<div class="grid stats-grid">
+    <div class="stat-card">
+        <p class="stat-label">Total documents</p>
+        <p class="stat-value">{{ total_documents }}</p>
+    </div>
+    <div class="stat-card">
+        <p class="stat-label">Expired documents</p>
+        <p class="stat-value">{{ expired_documents }}</p>
+    </div>
+    <div class="stat-card">
+        <p class="stat-label">Recent documents</p>
+        <p class="stat-value">{{ recent_documents|length }}</p>
+    </div>
 </div>
 
 <div class="card">
-    <h2>Recent Documents</h2>
+    <div class="page-header" style="margin-bottom: 0.75rem;">
+        <div>
+            <h2>Recent Documents</h2>
+            <p class="muted">Latest files available to your account.</p>
+        </div>
+    </div>
 
-    {% if recent_documents %}
-        <ul>
-            {% for document in recent_documents %}
-                <li>
-                    <a href="{% url 'vault:document_detail' document.public_id %}">
-                        {{ document.title }}
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No documents yet.</p>
-    {% endif %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Document</th>
+                    <th>Type</th>
+                    <th>Facility</th>
+                    <th>Scan</th>
+                    <th>Uploaded</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for document in recent_documents %}
+                    <tr>
+                        <td>
+                            <a class="document-title" href="{% url 'vault:document_detail' document.public_id %}">{{ document.title }}</a><br>
+                            <span class="muted">{{ document.original_filename }}</span>
+                        </td>
+                        <td>{{ document.get_document_type_display }}</td>
+                        <td>{{ document.facility|default:"Organization-level" }}</td>
+                        <td><span class="badge {{ document.scan_status }}">{{ document.get_scan_status_display }}</span></td>
+                        <td>{{ document.created_at|date:"M j, Y g:i A" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="empty-state">No documents yet. Upload your first file to start building the vault.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

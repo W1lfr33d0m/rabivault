@@ -1,15 +1,19 @@
 {% extends "base.html" %}
 
+{% block title %}Delete Document · RabiVault{% endblock %}
+
 {% block content %}
 <div class="card">
-    <h1>Delete Document</h1>
+    <p class="eyebrow">Confirm delete</p>
+    <h1>Delete “{{ document.title }}”?</h1>
+    <p class="page-description">This performs a soft delete. The document record remains for audit and retention history.</p>
 
-    <p>Are you sure you want to delete {{ document.title }}?</p>
-
-    <form method="post">
+    <form method="post" style="margin-top: 1rem;">
         {% csrf_token %}
-        <button class="danger" type="submit">Yes, delete</button>
-        <a href="{% url 'vault:document_detail' document.public_id %}">Cancel</a>
+        <div class="actions">
+            <button class="danger" type="submit">Yes, delete document</button>
+            <a class="btn secondary" href="{% url 'vault:document_detail' document.public_id %}">Cancel</a>
+        </div>
     </form>
 </div>
 {% endblock %}

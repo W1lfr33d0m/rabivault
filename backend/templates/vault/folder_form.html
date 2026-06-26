@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}New Folder · RabiVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Folders</p>
+        <h1>Create Folder</h1>
+        <p class="page-description">Use folders to organize documents by facility, project, year, or compliance process.</p>
+    </div>
+    <div class="actions">
+        <a class="btn secondary" href="{% url 'vault:document_list' %}">Back to File Manager</a>
+    </div>
+</div>
+
+<div class="card">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-grid">
+            <div>
+                <label for="{{ form.name.id_for_label }}">Folder name</label>
+                {{ form.name }}
+                {{ form.name.errors }}
+            </div>
+
+            <div>
+                <label for="{{ form.facility.id_for_label }}">Facility</label>
+                {{ form.facility }}
+                {{ form.facility.errors }}
+            </div>
+
+            <div class="span-2">
+                <label for="{{ form.parent.id_for_label }}">Parent folder</label>
+                {{ form.parent }}
+                {{ form.parent.errors }}
+            </div>
+        </div>
+
+        <div class="actions" style="margin-top: 1rem;">
+            <button type="submit">Create Folder</button>
+            <a class="btn secondary" href="{% url 'vault:document_list' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

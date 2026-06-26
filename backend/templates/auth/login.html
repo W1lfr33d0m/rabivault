@@ -1,14 +1,53 @@
 {% extends "base.html" %}
 
+{% block title %}Login · RabiVault{% endblock %}
+
 {% block content %}
-<div class="card">
-    <h1>RabiVault Login</h1>
+<div class="login-shell">
+    <section class="login-hero">
+        <div class="logo">
+            <div class="logo-mark">RV</div>
+            <span>RabiVault</span>
+        </div>
+        <h1>Secure access for medical document management.</h1>
+        <p>
+            Sign in to upload, organize, audit, and download protected facility documents.
+            File access is controlled by organization, facility, role, MFA status, and audit logging.
+        </p>
+        <div class="actions" style="margin-top: 1.5rem;">
+            <span class="badge">Encrypted storage</span>
+            <span class="badge">Audit ready</span>
+            <span class="badge">MinIO backed</span>
+        </div>
+    </section>
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
+    <section class="login-panel">
+        <p class="eyebrow">Welcome back</p>
+        <h2>Log in to RabiVault</h2>
+        <p class="muted">Use the Django user account assigned to your organization.</p>
 
-        <button type="submit">Login</button>
-    </form>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div>
+                <label for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username }}
+                {{ form.username.errors }}
+            </div>
+
+            <div>
+                <label for="{{ form.password.id_for_label }}">Password</label>
+                {{ form.password }}
+                {{ form.password.errors }}
+            </div>
+
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
+
+            <button type="submit" style="width: 100%; margin-top: 0.75rem;">Login</button>
+        </form>
+    </section>
 </div>
 {% endblock %}

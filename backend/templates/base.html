@@ -1,78 +1,69 @@
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>RabiVault</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 2rem;
-            background: #f7f7f7;
-        }
-
-        nav {
-            margin-bottom: 2rem;
-        }
-
-        .card {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            border: 1px solid #ddd;
-        }
-
-        table {
-            width: 100%;
-            background: white;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 0.75rem;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-        }
-
-        input, select, textarea {
-            padding: 0.5rem;
-            margin-bottom: 1rem;
-            width: 100%;
-        }
-
-        button, .button {
-            padding: 0.5rem 1rem;
-            background: #1f6feb;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            text-decoration: none;
-        }
-
-        .danger {
-            background: #c0392b;
-        }
-    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}RabiVault{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
 </head>
-<body>
-    <nav>
-        <strong>RabiVault</strong> |
-        <a href="{% url 'vault:dashboard' %}">Dashboard</a> |
-        <a href="{% url 'vault:document_list' %}">Documents</a> |
-        <a href="{% url 'vault:document_upload' %}">Upload</a> |
-        <a href="{% url 'audit:audit_log_list' %}">Audit Logs</a> |
+<body class="{% block body_class %}{% if user.is_authenticated %}app-page{% else %}login-page{% endif %}{% endblock %}">
+    {% if user.is_authenticated %}
+        <div class="app-layout">
+            <aside class="sidebar">
+                <div>
+                    <div class="logo">
+                        <div class="logo-mark">RV</div>
+                        <span>RabiVault</span>
+                    </div>
+                    <p class="sidebar-subtitle">Secure document vault for medical facilities.</p>
+                </div>
 
-        {% if user.is_authenticated %}
-            <span>Logged in as {{ user.username }}</span> |
-            <a href="{% url 'logout' %}">Logout</a>
-        {% endif %}
-    </nav>
+                <nav>
+                    <p class="nav-section-label">Workspace</p>
+                    <div class="nav-list">
+                        <a class="nav-link" href="{% url 'vault:dashboard' %}">Dashboard</a>
+                        <a class="nav-link" href="{% url 'vault:document_list' %}">File Manager</a>
+                        <a class="nav-link" href="{% url 'vault:document_upload' %}">Upload File</a>
+                        <a class="nav-link" href="{% url 'vault:folder_create' %}">New Folder</a>
+                    </div>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="card">{{ message }}</div>
-        {% endfor %}
+                    <p class="nav-section-label">Compliance</p>
+                    <div class="nav-list">
+                        <a class="nav-link" href="{% url 'audit:audit_log_list' %}">Audit Logs</a>
+                        <a class="nav-link" href="/admin/">Admin</a>
+                    </div>
+                </nav>
+            </aside>
+
+            <main class="main">
+                <header class="topbar">
+                    <div>
+                        <p class="eyebrow">Protected workspace</p>
+                        <strong>{{ user.profile.organization|default:"No organization assigned" }}</strong>
+                    </div>
+                    <div class="actions">
+                        <div class="user-chip">
+                            <div class="avatar">{{ user.username|slice:":1"|upper }}</div>
+                            <div>
+                                <strong>{{ user.username }}</strong><br>
+                                <span class="muted">{{ user.profile.get_role_display|default:"User" }}</span>
+                            </div>
+                        </div>
+                        <form class="logout-form" method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button class="btn secondary" type="submit">Logout</button>
+                        </form>
+                    </div>
+                </header>
     {% endif %}
 
-    {% block content %}{% endblock %}
+                {% include "partials/messages.html" %}
+                {% block content %}{% endblock %}
+
+    {% if user.is_authenticated %}
+            </main>
+        </div>
+    {% endif %}
 </body>
 </html>

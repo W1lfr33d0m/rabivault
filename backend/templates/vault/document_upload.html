@@ -1,14 +1,80 @@
 {% extends "base.html" %}
 
+{% block title %}Upload File · RabiVault{% endblock %}
+
 {% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Upload</p>
+        <h1>Upload Document</h1>
+        <p class="page-description">Files are stored in MinIO, scanned by ClamAV, and recorded in the audit log after upload.</p>
+    </div>
+    <div class="actions">
+        <a class="btn secondary" href="{% url 'vault:document_list' %}">Back to File Manager</a>
+    </div>
+</div>
+
 <div class="card">
-    <h1>Upload Document</h1>
-
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ form.non_field_errors }}
 
-        <button type="submit">Upload</button>
+        <div class="form-grid">
+            <div>
+                <label for="{{ form.title.id_for_label }}">Title</label>
+                {{ form.title }}
+                {{ form.title.errors }}
+            </div>
+
+            <div>
+                <label for="{{ form.document_type.id_for_label }}">Document type</label>
+                {{ form.document_type }}
+                {{ form.document_type.errors }}
+            </div>
+
+            <div>
+                <label for="{{ form.facility.id_for_label }}">Facility</label>
+                {{ form.facility }}
+                {{ form.facility.errors }}
+            </div>
+
+            <div>
+                <label for="{{ form.folder.id_for_label }}">Folder</label>
+                {{ form.folder }}
+                {{ form.folder.errors }}
+            </div>
+
+            <div class="span-2">
+                <label for="{{ form.file.id_for_label }}">File</label>
+                {{ form.file }}
+                <p class="helptext">Allowed: PDF, JPG, PNG, DOCX, XLSX, TXT, DICOM, ZIP. Max size: 500 MB.</p>
+                {{ form.file.errors }}
+            </div>
+
+            <div>
+                <label for="{{ form.expires_at.id_for_label }}">Expires at</label>
+                {{ form.expires_at }}
+                {{ form.expires_at.errors }}
+            </div>
+
+            <div>
+                <label for="{{ form.retention_until.id_for_label }}">Retention until</label>
+                {{ form.retention_until }}
+                {{ form.retention_until.errors }}
+            </div>
+
+            <div class="span-2">
+                <label for="{{ form.tags.id_for_label }}">Tags</label>
+                {{ form.tags }}
+                <p class="helptext">Use JSON format for now, for example: ["inspection", "2026"].</p>
+                {{ form.tags.errors }}
+            </div>
+        </div>
+
+        <div class="actions" style="margin-top: 1rem;">
+            <button type="submit">Upload Document</button>
+            <a class="btn secondary" href="{% url 'vault:document_list' %}">Cancel</a>
+        </div>
     </form>
 </div>
 {% endblock %}

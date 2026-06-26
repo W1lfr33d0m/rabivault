@@ -1,25 +1,59 @@
 {% extends "base.html" %}
 
+{% block title %}{{ document.title }} · RabiVault{% endblock %}
+
 {% block content %}
-<div class="card">
-    <h1>{{ document.title }}</h1>
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Document details</p>
+        <h1>{{ document.title }}</h1>
+        <p class="page-description">{{ document.original_filename }}</p>
+    </div>
+    <div class="actions">
+        <a class="btn secondary" href="{% url 'vault:document_list' %}">Back to File Manager</a>
+        {% if document.scan_status == "clean" %}
+            <a class="btn" href="{% url 'vault:document_download' document.public_id %}">Download</a>
+        {% else %}
+            <span class="badge {{ document.scan_status }}">Download locked: {{ document.get_scan_status_display }}</span>
+        {% endif %}
+    </div>
+</div>
 
-    <p><strong>Type:</strong> {{ document.document_type }}</p>
-    <p><strong>Organization:</strong> {{ document.organization }}</p>
-    <p><strong>Facility:</strong> {{ document.facility|default:"Organization-level" }}</p>
-    <p><strong>Original filename:</strong> {{ document.original_filename }}</p>
-    <p><strong>Checksum:</strong> {{ document.checksum_sha256 }}</p>
-    <p><strong>File size:</strong> {{ document.file_size }} bytes</p>
-    <p><strong>Uploaded by:</strong> {{ document.uploaded_by }}</p>
-    <p><strong>Created:</strong> {{ document.created_at }}</p>
+<div class="detail-grid">
+    <section class="card">
+        <h2>Metadata</h2>
+        <div class="meta-list">
+            <div class="meta-row"><strong>Type</strong><span>{{ document.get_document_type_display }}</span></div>
+            <div class="meta-row"><strong>Category</strong><span>{{ document.get_document_category_display }}</span></div>
+            <div class="meta-row"><strong>Organization</strong><span>{{ document.organization }}</span></div>
+            <div class="meta-row"><strong>Facility</strong><span>{{ document.facility|default:"Organization-level" }}</span></div>
+            <div class="meta-row"><strong>Folder</strong><span>{{ document.folder|default:"No folder" }}</span></div>
+            <div class="meta-row"><strong>Uploaded by</strong><span>{{ document.uploaded_by }}</span></div>
+            <div class="meta-row"><strong>Created</strong><span>{{ document.created_at|date:"M j, Y g:i A" }}</span></div>
+            <div class="meta-row"><strong>File size</strong><span>{{ document.file_size }} bytes</span></div>
+            <div class="meta-row"><strong>Checksum</strong><span style="word-break: break-all;">{{ document.checksum_sha256 }}</span></div>
+        </div>
+    </section>
 
-    <a class="button" href="{% url 'vault:document_download' document.public_id %}">
-        Download
-    </a>
+    <aside class="card">
+        <h2>Status</h2>
+        <p><span class="badge {{ document.status }}">{{ document.get_status_display }}</span></p>
+        <p><span class="badge {{ document.scan_status }}">Antivirus: {{ document.get_scan_status_display }}</span></p>
 
-    <form method="post" action="{% url 'vault:document_delete' document.public_id %}" style="margin-top: 1rem;">
-        {% csrf_token %}
-        <button class="danger" type="submit">Delete</button>
-    </form>
+        {% if document.scan_result %}
+            <p class="muted">{{ document.scan_result }}</p>
+        {% endif %}
+
+        <hr style="border: 0; border-top: 1px solid var(--line); margin: 1rem 0;">
+
+        <h3>Retention</h3>
+        <p><strong>Expires:</strong> {{ document.expires_at|default:"Not set" }}</p>
+        <p><strong>Retain until:</strong> {{ document.retention_until|default:"Not set" }}</p>
+
+        <form method="post" action="{% url 'vault:document_delete' document.public_id %}" style="margin-top: 1rem;">
+            {% csrf_token %}
+            <button class="danger" type="submit">Delete Document</button>
+        </form>
+    </aside>
 </div>
 {% endblock %}
