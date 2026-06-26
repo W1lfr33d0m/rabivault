@@ -33,6 +33,11 @@
                         <a class="nav-link" href="{% url 'audit:audit_log_list' %}">Audit Logs</a>
                         <a class="nav-link" href="/admin/">Admin</a>
                     </div>
+
+                    <p class="nav-section-label">Account</p>
+                    <div class="nav-list">
+                        <a class="nav-link" href="{% url 'accounts:mfa_setup' %}">MFA Setup</a>
+                    </div>
                 </nav>
             </aside>
 

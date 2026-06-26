@@ -1,6 +1,20 @@
+# Local environment files
 .env
-*.sqlite3
+.env.*
+!.env.example
+
+# Python / Django
 __pycache__/
-*.pyc
+*.py[cod]
+*.sqlite3
 media/
 staticfiles/
+
+# Local backups and database dumps
+backups/
+*.sql
+*.sql.gz
+
+# OS / editor noise
+.DS_Store
+.vscode/*.log

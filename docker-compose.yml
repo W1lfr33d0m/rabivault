@@ -4,6 +4,7 @@ services:
     container_name: rabivault_web
     command: >
       sh -c "python manage.py migrate &&
+             python manage.py ensure_minio_bucket &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./backend:/app
@@ -13,14 +14,17 @@ services:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings
-      SECRET_KEY: ${SECRET_KEY}
-      DEBUG: ${DEBUG}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
     depends_on:
-      - db
-      - redis
-      - minio
-      - clamav
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_healthy
+      clamav:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
 
   worker:
     build: ./backend
@@ -31,10 +35,16 @@ services:
     env_file:
       - .env
     depends_on:
-      - db
-      - redis
-      - minio
-      - clamav
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_healthy
+      clamav:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
 
   db:
     image: postgres:16
@@ -49,6 +59,11 @@ services:
       - rabivault_postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7
@@ -70,22 +85,45 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc
+    container_name: rabivault_minio_init
+    env_file:
+      - .env
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} &&
+      mc mb --ignore-existing local/$${AWS_STORAGE_BUCKET_NAME} &&
+      echo MinIO bucket ready: $${AWS_STORAGE_BUCKET_NAME}
+      "
 
   clamav:
     image: clamav/clamav:stable
     container_name: rabivault_clamav
     ports:
       - "3310:3310"
-  
+
   backup:
     image: postgres:16
     container_name: rabivault_backup
     volumes:
       - ./backups:/backups
+    env_file:
+      - .env
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     entrypoint: ["sleep", "infinity"]
 
   orthanc:

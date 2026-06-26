@@ -33,6 +33,12 @@
             </div>
 
             <div>
+                <label for="{{ form.document_category.id_for_label }}">Category</label>
+                {{ form.document_category }}
+                {{ form.document_category.errors }}
+            </div>
+
+            <div>
                 <label for="{{ form.facility.id_for_label }}">Facility</label>
                 {{ form.facility }}
                 {{ form.facility.errors }}
@@ -44,11 +50,42 @@
                 {{ form.folder.errors }}
             </div>
 
-            <div class="span-2">
+            <div>
                 <label for="{{ form.file.id_for_label }}">File</label>
                 {{ form.file }}
-                <p class="helptext">Allowed: PDF, JPG, PNG, DOCX, XLSX, TXT, DICOM, ZIP. Max size: 500 MB.</p>
+                <p class="helptext">Allowed: PDF, images, Word, Excel, PowerPoint, TXT, CSV, DICOM, ZIP. Max size: 500 MB.</p>
                 {{ form.file.errors }}
+            </div>
+
+            <div>
+                <label for="{{ form.modality.id_for_label }}">Modality</label>
+                {{ form.modality }}
+                {{ form.modality.errors }}
+            </div>
+
+            <div>
+                <label for="{{ form.study_date.id_for_label }}">Study date</label>
+                {{ form.study_date }}
+                {{ form.study_date.errors }}
+            </div>
+
+            <div>
+                <label for="{{ form.accession_number.id_for_label }}">Accession number</label>
+                {{ form.accession_number }}
+                {{ form.accession_number.errors }}
+            </div>
+
+            <div>
+                <label for="{{ form.patient_identifier.id_for_label }}">Patient identifier</label>
+                {{ form.patient_identifier }}
+                <p class="helptext">Avoid names when possible. Use the facility-approved identifier.</p>
+                {{ form.patient_identifier.errors }}
+            </div>
+
+            <div class="span-2">
+                <label for="{{ form.study_instance_uid.id_for_label }}">Study Instance UID</label>
+                {{ form.study_instance_uid }}
+                {{ form.study_instance_uid.errors }}
             </div>
 
             <div>
@@ -66,7 +103,7 @@
             <div class="span-2">
                 <label for="{{ form.tags.id_for_label }}">Tags</label>
                 {{ form.tags }}
-                <p class="helptext">Use JSON format for now, for example: ["inspection", "2026"].</p>
+                <p class="helptext">Use comma-separated tags, for example: inspection, 2026, MRI.</p>
                 {{ form.tags.errors }}
             </div>
         </div>

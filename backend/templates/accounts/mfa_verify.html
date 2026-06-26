@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Verify MFA · RabiVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Account security</p>
+        <h1>Verify MFA</h1>
+        <p class="page-description">Enter the current 6-digit code from your authenticator app to continue.</p>
+    </div>
+</div>
+
+<div class="card" style="max-width: 520px;">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next }}">
+        <label for="token">6-digit code</label>
+        <input id="token" name="token" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" required>
+        <button type="submit" style="margin-top: 1rem; width: 100%;">Verify</button>
+    </form>
+</div>
+{% endblock %}

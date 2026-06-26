@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}MFA Setup · RabiVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Account security</p>
+        <h1>Set up MFA</h1>
+        <p class="page-description">Scan the QR code with an authenticator app, then enter the current 6-digit code.</p>
+    </div>
+    <div class="actions">
+        <a class="btn secondary" href="{% url 'vault:dashboard' %}">Back to Dashboard</a>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <section class="card">
+        <h2>Authenticator QR code</h2>
+        <div class="qr-box">
+            {{ qr_svg|safe }}
+        </div>
+        <p class="helptext">Use Microsoft Authenticator, Google Authenticator, 1Password, Authy, or another TOTP app.</p>
+    </section>
+
+    <aside class="card">
+        <h2>Verify setup</h2>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <label for="token">6-digit code</label>
+            <input id="token" name="token" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" required>
+            <button type="submit" style="margin-top: 1rem; width: 100%;">Enable MFA</button>
+        </form>
+
+        <hr style="border: 0; border-top: 1px solid var(--line); margin: 1rem 0;">
+        <h3>Manual setup</h3>
+        <p class="muted">If the QR code does not scan, copy this setup URL into your authenticator app.</p>
+        <p class="mono-wrap">{{ manual_config_url }}</p>
+    </aside>
+</div>
+{% endblock %}

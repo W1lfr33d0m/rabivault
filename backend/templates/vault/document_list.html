@@ -15,11 +15,11 @@
     </div>
 </div>
 
-<div class="card flat" style="margin-bottom: 1rem;">
+<div class="card">
     <form class="filter-bar" method="get">
         <div>
             <label for="q">Search</label>
-            <input id="q" type="text" name="q" placeholder="Search title..." value="{{ query }}">
+            <input id="q" name="q" value="{{ query }}" placeholder="Title, filename, checksum...">
         </div>
 
         <div>
@@ -63,6 +63,7 @@
                 <tr>
                     <th>Document</th>
                     <th>Type</th>
+                    <th>Category</th>
                     <th>Facility</th>
                     <th>Folder</th>
                     <th>Scan</th>
@@ -78,6 +79,7 @@
                             <span class="muted">{{ document.original_filename|default:"No filename" }}</span>
                         </td>
                         <td>{{ document.get_document_type_display }}</td>
+                        <td>{{ document.get_document_category_display }}</td>
                         <td>{{ document.facility|default:"Organization-level" }}</td>
                         <td>{{ document.folder|default:"No folder" }}</td>
                         <td><span class="badge {{ document.scan_status }}">{{ document.get_scan_status_display }}</span></td>
@@ -86,11 +88,25 @@
                     </tr>
                 {% empty %}
                     <tr>
-                        <td colspan="7" class="empty-state">No documents found. Try clearing filters or upload a new file.</td>
+                        <td colspan="8" class="empty-state">No documents found. Try clearing filters or upload a new file.</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination">
+            <span class="muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            <div class="page-links">
+                {% if page_obj.has_previous %}
+                    <a class="btn secondary" href="?q={{ query }}&type={{ document_type }}&facility={{ facility_id }}&folder={{ folder_id }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a class="btn secondary" href="?q={{ query }}&type={{ document_type }}&facility={{ facility_id }}&folder={{ folder_id }}&page={{ page_obj.next_page_number }}">Next</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

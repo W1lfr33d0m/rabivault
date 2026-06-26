@@ -23,9 +23,12 @@ env = environ.Env(
 environ.Env.read_env(BASE_DIR.parent / ".env")
 
 SECRET_KEY = env("SECRET_KEY", default="dev-secret-key")
-DEBUG = env("DEBUG", default=True)
+DEBUG = env.bool("DEBUG", default=True)
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = env.list(
+    "DJANGO_ALLOWED_HOSTS",
+    default=["localhost", "127.0.0.1", "0.0.0.0"],
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -154,5 +157,9 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_SSL_REDIRECT = False
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
-FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = env.int("DATA_UPLOAD_MAX_MEMORY_SIZE", default=100 * 1024 * 1024)
+FILE_UPLOAD_MAX_MEMORY_SIZE = env.int("FILE_UPLOAD_MAX_MEMORY_SIZE", default=100 * 1024 * 1024)
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "vault:dashboard"
+LOGOUT_REDIRECT_URL = "login"

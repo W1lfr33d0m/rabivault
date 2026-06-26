@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django_ratelimit.decorators import ratelimit
@@ -72,7 +74,11 @@ def document_list(request):
     folder_id = request.GET.get("folder", "")
 
     if query:
-        docs = docs.filter(title__icontains=query)
+        docs = docs.filter(
+            Q(title__icontains=query) |
+            Q(original_filename__icontains=query) |
+            Q(checksum_sha256__icontains=query)
+        )
 
     if document_type:
         docs = docs.filter(document_type=document_type)
@@ -85,8 +91,13 @@ def document_list(request):
 
     facilities, folders = _workspace_lists_for_user(request.user)
 
+    docs = docs.select_related("organization", "facility", "folder", "uploaded_by")
+    paginator = Paginator(docs, 25)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
     context = {
-        "documents": docs.select_related("organization", "facility", "folder", "uploaded_by"),
+        "documents": page_obj.object_list,
+        "page_obj": page_obj,
         "query": query,
         "document_type": document_type,
         "facility_id": facility_id,
@@ -163,6 +174,9 @@ def document_upload(request):
 
         facility = document.facility
 
+        if document.folder and document.folder.organization_id != organization.id:
+            raise PermissionDenied("The selected folder does not belong to your organization.")
+
         if not user_can_upload_document(request.user, organization, facility):
             raise PermissionDenied("You do not have permission to upload here.")
 
@@ -183,7 +197,7 @@ def document_upload(request):
             },
         )
 
-        messages.success(request, "Document uploaded successfully.")
+        messages.success(request, "Document uploaded successfully. Antivirus scanning has been queued.")
         return redirect("vault:document_detail", public_id=document.public_id)
 
     return render(request, "vault/document_upload.html", {"form": form})
@@ -223,6 +237,12 @@ def folder_create(request):
 
         if folder.facility and not user_can_access_facility(request.user, folder.facility):
             raise PermissionDenied("You do not have permission to create folders for this facility.")
+
+        if folder.parent and folder.parent.organization_id != organization.id:
+            raise PermissionDenied("The selected parent folder does not belong to your organization.")
+
+        if folder.parent and folder.facility_id and folder.parent.facility_id and folder.parent.facility_id != folder.facility_id:
+            raise PermissionDenied("The selected parent folder belongs to a different facility.")
 
         folder.save()
 

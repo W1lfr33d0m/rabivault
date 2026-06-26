@@ -1,34 +1,79 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h1>Audit Logs</h1>
+{% block title %}Audit Logs · RabiVault{% endblock %}
 
-<table>
-    <thead>
-        <tr>
-            <th>Time</th>
-            <th>Actor</th>
-            <th>Action</th>
-            <th>Object</th>
-            <th>IP</th>
-            <th>Metadata</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for log in logs %}
-            <tr>
-                <td>{{ log.created_at }}</td>
-                <td>{{ log.actor|default:"System/Anonymous" }}</td>
-                <td>{{ log.action }}</td>
-                <td>{{ log.object_type }} {{ log.object_id }}</td>
-                <td>{{ log.ip_address }}</td>
-                <td>{{ log.metadata }}</td>
-            </tr>
-        {% empty %}
-            <tr>
-                <td colspan="6">No audit logs found.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Compliance</p>
+        <h1>Audit Logs</h1>
+        <p class="page-description">Review sensitive activity including uploads, downloads, views, deletes, and MFA changes.</p>
+    </div>
+</div>
+
+<div class="card">
+    <form class="filter-bar" method="get">
+        <div>
+            <label for="q">Object ID</label>
+            <input id="q" name="q" value="{{ query }}" placeholder="Document UUID or object id">
+        </div>
+        <div>
+            <label for="action">Action</label>
+            <select id="action" name="action">
+                <option value="">All actions</option>
+                {% for value, label in action_choices %}
+                    <option value="{{ value }}" {% if action == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit">Filter</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Actor</th>
+                    <th>Action</th>
+                    <th>Object</th>
+                    <th>IP</th>
+                    <th>Hash</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                    <tr>
+                        <td>{{ log.created_at|date:"M j, Y g:i A" }}</td>
+                        <td>{{ log.actor|default:"System/Anonymous" }}</td>
+                        <td>{{ log.get_action_display }}</td>
+                        <td>{{ log.object_type }}<br><span class="muted">{{ log.object_id }}</span></td>
+                        <td>{{ log.ip_address|default:"—" }}</td>
+                        <td><span class="muted">{{ log.current_hash|slice:":12" }}...</span></td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">No audit logs found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination">
+            <span class="muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            <div class="page-links">
+                {% if page_obj.has_previous %}
+                    <a class="btn secondary" href="?q={{ query }}&action={{ action }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a class="btn secondary" href="?q={{ query }}&action={{ action }}&page={{ page_obj.next_page_number }}">Next</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

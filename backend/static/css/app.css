@@ -508,3 +508,44 @@ tr:last-child td {
         gap: 0.25rem;
     }
 }
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.pagination .page-links {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.qr-box {
+    display: grid;
+    place-items: center;
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.qr-box svg {
+    width: min(280px, 100%);
+    height: auto;
+}
+
+.mono-wrap {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    word-break: break-all;
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.75rem;
+}

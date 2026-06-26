@@ -16,6 +16,9 @@ class AuditLog(models.Model):
         ("update_document", "Update Document"),
         ("permission_change", "Permission Change"),
         ("create_share", "Create Share"),
+        ("create_folder", "Create Folder"),
+        ("mfa_enabled", "MFA Enabled"),
+        ("mfa_verified", "MFA Verified"),
         ("export_package", "Export Package"),
     ]
 
