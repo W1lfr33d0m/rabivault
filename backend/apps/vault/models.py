@@ -54,14 +54,13 @@ class Document(models.Model):
     ]
 
     DOCUMENT_TYPE_CHOICES = [
-        ("license", "License"),
-        ("policy", "Policy"),
-        ("inspection", "Inspection"),
-        ("equipment", "Equipment"),
-        ("contract", "Contract"),
-        ("invoice", "Invoice"),
-        ("training", "Training"),
-        ("report", "Report"),
+         ("pdf", "PDF"),
+        ("document", "Document"),
+        ("spreadsheet", "Spreadsheet"),
+        ("presentation", "Presentation"),
+        ("image", "Image"),
+        ("dicom", "DICOM"),
+        ("archive", "Archive"),
         ("other", "Other"),
     ]
 

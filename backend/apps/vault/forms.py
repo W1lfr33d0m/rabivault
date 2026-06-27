@@ -1,6 +1,8 @@
 import json
 import os
 
+from pathlib import Path
+
 from django import forms
 
 from .models import Document, VaultFolder
@@ -22,6 +24,30 @@ ALLOWED_CONTENT_TYPES = [
     "application/x-zip-compressed",
     "application/dicom",
 ]
+
+EXTENSION_TO_DOCUMENT_TYPE = {
+    ".pdf": "pdf",
+
+    ".doc": "document",
+    ".docx": "document",
+    ".txt": "document",
+
+    ".xls": "spreadsheet",
+    ".xlsx": "spreadsheet",
+    ".csv": "spreadsheet",
+
+    ".ppt": "presentation",
+    ".pptx": "presentation",
+
+    ".jpg": "image",
+    ".jpeg": "image",
+    ".png": "image",
+
+    ".dcm": "dicom",
+    ".dicom": "dicom",
+
+    ".zip": "archive",
+}
 
 ALLOWED_EXTENSIONS = [
     ".pdf",
@@ -55,7 +81,6 @@ class DocumentUploadForm(forms.ModelForm):
         model = Document
         fields = [
             "title",
-            "document_type",
             "document_category",
             "facility",
             "folder",
@@ -80,17 +105,16 @@ class DocumentUploadForm(forms.ModelForm):
         }
 
     def clean_file(self):
-        uploaded_file = self.cleaned_data["file"]
+        uploaded_file = self.cleaned_data.get("file")
 
-        if uploaded_file.size > MAX_FILE_SIZE_MB * 1024 * 1024:
-            raise forms.ValidationError(f"File must be under {MAX_FILE_SIZE_MB} MB.")
+        if not uploaded_file:
+            return uploaded_file
 
-        ext = os.path.splitext(uploaded_file.name)[1].lower()
+        extension = Path(uploaded_file.name).suffix.lower()
 
-        if ext not in ALLOWED_EXTENSIONS:
+        if extension not in ALLOWED_EXTENSIONS:
             raise forms.ValidationError(
-                "This file type is not allowed. Allowed types: "
-                + ", ".join(ALLOWED_EXTENSIONS)
+                f"Unsupported file type: {extension}"
             )
 
         return uploaded_file
@@ -129,6 +153,13 @@ class DocumentUploadForm(forms.ModelForm):
 
         return cleaned
 
+def detect_document_type(uploaded_file):
+    extension = Path(uploaded_file.name).suffix.lower()
+
+    if extension not in ALLOWED_EXTENSIONS:
+        return "other"
+
+    return EXTENSION_TO_DOCUMENT_TYPE.get(extension, "other")
 
 class VaultFolderForm(forms.ModelForm):
     class Meta:

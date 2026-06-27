@@ -23,7 +23,7 @@ from .permissions import (
 )
 from .tasks import scan_document_for_virus
 from .utils import calculate_sha256, generate_presigned_download_url
-
+from .forms import detect_document_type
 
 def _workspace_lists_for_user(user):
     profile = getattr(user, "profile", None)
@@ -166,11 +166,14 @@ def document_upload(request):
 
     if request.method == "POST" and form.is_valid():
         document = form.save(commit=False)
-        document.organization = organization
+        document.organization = request.user.profile.organization
         document.uploaded_by = request.user
+        document.document_type = detect_document_type(document.file)
         document.original_filename = document.file.name
         document.file_size = document.file.size
         document.content_type = getattr(document.file.file, "content_type", "")
+        document.save()
+        form.save_m2m()
 
         facility = document.facility
 
