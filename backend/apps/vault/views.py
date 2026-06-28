@@ -7,6 +7,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django_ratelimit.decorators import ratelimit
 
+from .file_detection import detect_uploaded_file
+
 from apps.accounts.decorators import mfa_required
 from apps.audit.utils import write_audit_log
 from apps.compliance.utils import organization_has_active_baa
@@ -166,6 +168,7 @@ def document_upload(request):
 
     if request.method == "POST" and form.is_valid():
         document = form.save(commit=False)
+        detected = detect_uploaded_file(document.file)
         document.organization = request.user.profile.organization
         document.uploaded_by = request.user
         document.document_type = detect_document_type(document.file)
