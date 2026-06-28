@@ -24,8 +24,12 @@ def scan_file_stream_with_clamav(file_obj):
         port=getattr(settings, "CLAMAV_PORT", 3310),
     )
 
+    scanner.ping()
+
     file_obj.seek(0)
-    result = scanner.instream(file_obj)
+    file_bytes = file_obj.read()
+
+    result = scanner.scan_stream(file_bytes)
 
     if result is not None:
         return False, result
