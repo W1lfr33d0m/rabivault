@@ -5,6 +5,9 @@ from datetime import timedelta
 import tempfile
 from django.core.files.storage import default_storage
 
+from django.conf import settings
+from .ai_classifier import classify_document_with_ollama
+
 from apps.audit.utils import write_audit_log
 from .models import Document
 from .utils import scan_file_stream_with_clamav
@@ -27,6 +30,90 @@ def find_expiring_documents():
         "expiring_documents": count,
         "date_checked": str(today),
     }
+
+@shared_task
+def classify_document_with_ai(document_id):
+    from .models import Document
+
+    document = Document.objects.get(id=document_id)
+
+    if not getattr(settings, "ENABLE_AI_CLASSIFICATION", False):
+        document.ai_classification_status = "skipped"
+        document.save(update_fields=["ai_classification_status"])
+        return {"document_id": document_id, "status": "skipped"}
+
+    if document.scan_status != "clean":
+        document.ai_classification_status = "skipped"
+        document.save(update_fields=["ai_classification_status"])
+        return {
+            "document_id": document_id,
+            "status": "skipped",
+            "reason": "Document is not clean.",
+        }
+
+    document.ai_classification_status = "processing"
+    document.save(update_fields=["ai_classification_status"])
+
+    try:
+        # Simple MVP: use title + description first.
+        # Later we can extract actual text from PDFs, DOCX, XLSX, PPTX.
+        extracted_text = getattr(document, "description", "") or ""
+
+        extracted_text = ""
+
+        metadata_preview = f"""
+        Title: {document.title}
+        Detected document type: {document.document_type}
+        Original filename: {document.file.name if document.file else ""}
+        Scan status: {document.scan_status}
+        """
+
+        result = classify_document_with_ollama(
+            title=document.title,
+            document_type=document.document_type,
+            extracted_text=metadata_preview,
+        )
+
+        document.ai_category = result.get("category", "other")
+        document.ai_summary = result.get("summary", "")
+        document.ai_suggested_tags = result.get("suggested_tags", [])
+        document.ai_classification_result = result
+        document.ai_classification_status = "completed"
+        document.ai_classified_at = timezone.now()
+
+        document.save(
+            update_fields=[
+                "ai_category",
+                "ai_summary",
+                "ai_suggested_tags",
+                "ai_classification_result",
+                "ai_classification_status",
+                "ai_classified_at",
+            ]
+        )
+
+        return {
+            "document_id": document_id,
+            "status": "completed",
+            "category": document.ai_category,
+        }
+
+    except Exception as exc:
+        document.ai_classification_status = "failed"
+        document.ai_classification_result = {"error": str(exc)}
+        document.save(
+            update_fields=[
+                "ai_classification_status",
+                "ai_classification_result",
+            ]
+        )
+
+        return {
+            "document_id": document_id,
+            "status": "failed",
+            "error": str(exc),
+        }
+
 
 @shared_task
 def scan_document_for_virus(document_id):
@@ -64,6 +151,8 @@ def scan_document_for_virus(document_id):
                 "scanned_at",
             ]
         )
+
+        classify_document_with_ai.delay(document.id)
 
         write_audit_log(
             actor=document.uploaded_by,
@@ -113,7 +202,7 @@ def scan_document_for_virus(document_id):
             "scan_status": "failed",
             "error": str(exc),
         }
-
+    
 
 """@shared_task
 def scan_document_for_virus(document_id):

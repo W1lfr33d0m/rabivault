@@ -14,3 +14,4 @@ qrcode==7.4.2
 django-ratelimit==4.1.0
 filetype
 pydicom
+requests

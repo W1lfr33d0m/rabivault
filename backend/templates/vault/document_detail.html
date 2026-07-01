@@ -50,6 +50,91 @@
 
         <hr style="border: 0; border-top: 1px solid var(--line); margin: 1rem 0;">
 
+        <div class="card">
+            <div class="card-header">
+                <h3>AI Classification</h3>
+            </div>
+
+            {% if document.scan_status == "clean" %}
+                {% if document.ai_classification_status == "not_started" or document.ai_classification_status == "failed" %}
+                    <form method="post" action="{% url 'vault:document_ai_classify' document.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary">
+                            Run AI Classification
+                        </button>
+                    </form>
+                {% endif %}
+            {% endif %}
+
+            <div class="card-body">
+                <p>
+                    <strong>Status:</strong>
+                    {% if document.ai_classification_status == "completed" %}
+                        <span class="badge badge-success">Completed</span>
+                    {% elif document.ai_classification_status == "processing" %}
+                        <span class="badge badge-warning">Processing</span>
+                    {% elif document.ai_classification_status == "failed" %}
+                        <span class="badge badge-danger">Failed</span>
+                    {% elif document.ai_classification_status == "skipped" %}
+                        <span class="badge badge-muted">Skipped</span>
+                    {% else %}
+                        <span class="badge badge-muted">Not started</span>
+                    {% endif %}
+                </p>
+
+                {% if document.ai_category %}
+                    <p>
+                        <strong>Category:</strong>
+                        {{ document.ai_category }}
+                    </p>
+                {% endif %}
+
+                {% if document.ai_summary %}
+                    <p>
+                        <strong>Summary:</strong>
+                        {{ document.ai_summary }}
+                    </p>
+                {% endif %}
+
+                {% if document.ai_suggested_tags %}
+                    <p>
+                        <strong>Suggested tags:</strong>
+                        {% for tag in document.ai_suggested_tags %}
+                            <span class="badge">{{ tag }}</span>
+                        {% endfor %}
+                    </p>
+                {% endif %}
+
+                {% if document.ai_classification_result.confidence %}
+                    <p>
+                        <strong>Confidence:</strong>
+                        {{ document.ai_classification_result.confidence }}
+                    </p>
+                {% endif %}
+
+                {% if document.ai_classification_result.contains_possible_phi %}
+                    <p>
+                        <strong>Possible PHI:</strong>
+                        Yes
+                    </p>
+                {% endif %}
+
+                {% if document.ai_classification_result.reason %}
+                    <p>
+                        <strong>AI reason:</strong>
+                        {{ document.ai_classification_result.reason }}
+                    </p>
+                {% endif %}
+
+                {% if document.ai_classification_status == "failed" and document.ai_classification_result.error %}
+                    <p class="text-danger">
+                        <strong>Error:</strong>
+                        {{ document.ai_classification_result.error }}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+        
         <h3>Retention</h3>
         <p><strong>Expires:</strong> {{ document.expires_at|default:"Not set" }}</p>
         <p><strong>Retain until:</strong> {{ document.retention_until|default:"Not set" }}</p>

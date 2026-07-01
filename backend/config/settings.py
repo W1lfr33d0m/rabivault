@@ -163,3 +163,14 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = env.int("FILE_UPLOAD_MAX_MEMORY_SIZE", default=100
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "vault:dashboard"
 LOGOUT_REDIRECT_URL = "login"
+
+#AI Classification
+ENABLE_AI_CLASSIFICATION = os.getenv("ENABLE_AI_CLASSIFICATION", "False").lower() in (
+    "true",
+    "1",
+    "yes",
+    "on",
+)
+
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b")

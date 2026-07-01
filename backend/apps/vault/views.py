@@ -74,6 +74,10 @@ def document_list(request):
     document_type = request.GET.get("type", "")
     facility_id = request.GET.get("facility", "")
     folder_id = request.GET.get("folder", "")
+    ai_category = request.GET.get("ai_category")
+
+    if ai_category:
+        docs = docs.filter(ai_category=ai_category)
 
     if query:
         docs = docs.filter(

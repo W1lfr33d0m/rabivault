@@ -80,6 +80,27 @@ class Document(models.Model):
     ("failed", "Failed"),
     ]
 
+    AI_CLASSIFICATION_STATUS_CHOICES = [
+    ("not_started", "Not started"),
+    ("pending", "Pending"),
+    ("processing", "Processing"),
+    ("completed", "Completed"),
+    ("failed", "Failed"),
+    ("skipped", "Skipped"),
+]
+
+    ai_classification_status = models.CharField(
+        max_length=20,
+        choices=AI_CLASSIFICATION_STATUS_CHOICES,
+        default="not_started",
+    )
+
+    ai_category = models.CharField(max_length=100, blank=True)
+    ai_summary = models.TextField(blank=True)
+    ai_suggested_tags = models.JSONField(default=list, blank=True)
+    ai_classification_result = models.JSONField(default=dict, blank=True)
+    ai_classified_at = models.DateTimeField(null=True, blank=True)
+
     scan_status = models.CharField(
     max_length=20,
     choices=SCAN_STATUS_CHOICES,
@@ -277,3 +298,4 @@ class DocumentShare(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.document} - {self.permission}"
+    

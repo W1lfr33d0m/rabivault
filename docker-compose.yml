@@ -147,7 +147,16 @@ services:
       - "8042:8042"
       - "4242:4242"
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rabivault_ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+
 volumes:
   rabivault_postgres_data:
   rabivault_minio_data:
   rabivault_orthanc_data:
+  ollama_data:

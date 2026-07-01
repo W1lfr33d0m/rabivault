@@ -52,7 +52,28 @@
             </select>
         </div>
 
-        <button type="submit">Filter</button>
+        <div>
+            <label for="ai_category">AI Category</label>
+            <select id="ai_category" name="ai_category">
+                <option value="">All AI categories</option>
+                <option value="purchase_order">Purchase Order</option>
+                <option value="invoice">Invoice</option>
+                <option value="contract">Contract</option>
+                <option value="radiation_safety">Radiation Safety</option>
+                <option value="mammography_qc">Mammography QC</option>
+                <option value="training_material">Training Material</option>
+                <option value="policy">Policy</option>
+                <option value="medical_record">Medical Record</option>
+                <option value="imaging_metadata">Imaging Metadata</option>
+                <option value="spreadsheet">Spreadsheet</option>
+                <option value="presentation">Presentation</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+
+        <div style="grid-column: 1 / -1; display: flex; justify-content: center;">
+            <button type="submit">Filter</button>
+        </div>
     </form>
 </div>
 
@@ -69,6 +90,7 @@
                     <th>Scan</th>
                     <th>Status</th>
                     <th>Uploaded</th>
+                    <th>Classification</th>
                 </tr>
             </thead>
             <tbody>
@@ -85,6 +107,19 @@
                         <td><span class="badge {{ document.scan_status }}">{{ document.get_scan_status_display }}</span></td>
                         <td><span class="badge {{ document.status }}">{{ document.get_status_display }}</span></td>
                         <td>{{ document.created_at|date:"M j, Y g:i A" }}</td>
+                        <td>
+                            {% if document.ai_classification_status == "completed" %}
+                                <span class="badge badge-success">AI: {{ document.ai_category|default:"Other" }}</span>
+                            {% elif document.ai_classification_status == "processing" %}
+                                <span class="badge badge-warning">AI: Processing</span>
+                            {% elif document.ai_classification_status == "failed" %}
+                                <span class="badge badge-danger">AI: Failed</span>
+                            {% elif document.ai_classification_status == "skipped" %}
+                                <span class="badge badge-muted">AI: Skipped</span>
+                            {% else %}
+                                <span class="badge badge-muted">AI: Not classified</span>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% empty %}
                     <tr>
