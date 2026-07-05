@@ -7,6 +7,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django_ratelimit.decorators import ratelimit
 
+from django.http import JsonResponse
+
 from .file_detection import detect_uploaded_file
 
 from apps.accounts.decorators import mfa_required
@@ -326,3 +328,20 @@ def document_delete(request, public_id):
         return redirect("vault:document_list")
 
     return render(request, "vault/document_confirm_delete.html", {"document": document})
+
+@login_required
+def document_status(request, public_id):
+    document = get_object_or_404(Document, public_id=public_id)
+
+    if not user_can_view_document(request.user, document):
+        raise PermissionDenied("You do not have access to this document.")
+
+    return JsonResponse({
+        "scan_status": document.scan_status,
+        "scan_status_display": document.get_scan_status_display(),
+
+        "ai_classification_status": document.ai_classification_status,
+        "ai_category": document.ai_category,
+        "ai_summary": document.ai_summary,
+        "ai_suggested_tags": document.ai_suggested_tags,
+    })

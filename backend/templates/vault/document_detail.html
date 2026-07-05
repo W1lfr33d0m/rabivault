@@ -50,89 +50,40 @@
 
         <hr style="border: 0; border-top: 1px solid var(--line); margin: 1rem 0;">
 
-        <div class="card">
-            <div class="card-header">
-                <h3>AI Classification</h3>
-            </div>
+        <div id="ai-classification-box" class="card">
+            <h2>AI Classification</h2>
 
-            {% if document.scan_status == "clean" %}
-                {% if document.ai_classification_status == "not_started" or document.ai_classification_status == "failed" %}
-                    <form method="post" action="{% url 'vault:document_ai_classify' document.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-secondary">
-                            Run AI Classification
-                        </button>
-                    </form>
-                {% endif %}
-            {% endif %}
+            <p>
+                <strong>Status:</strong>
+                <span id="ai-status" class="badge {{ document.ai_classification_status }}">
+                    {{ document.get_ai_classification_status_display }}
+                </span>
+            </p>
 
-            <div class="card-body">
-                <p>
-                    <strong>Status:</strong>
-                    {% if document.ai_classification_status == "completed" %}
-                        <span class="badge badge-success">Completed</span>
-                    {% elif document.ai_classification_status == "processing" %}
-                        <span class="badge badge-warning">Processing</span>
-                    {% elif document.ai_classification_status == "failed" %}
-                        <span class="badge badge-danger">Failed</span>
-                    {% elif document.ai_classification_status == "skipped" %}
-                        <span class="badge badge-muted">Skipped</span>
-                    {% else %}
-                        <span class="badge badge-muted">Not started</span>
-                    {% endif %}
-                </p>
+            <p>
+                <strong>Category:</strong>
+                <span id="ai-category">
+                    {{ document.ai_category|default:"Not classified yet" }}
+                </span>
+            </p>
 
-                {% if document.ai_category %}
-                    <p>
-                        <strong>Category:</strong>
-                        {{ document.ai_category }}
-                    </p>
-                {% endif %}
+            <p>
+                <strong>Summary:</strong>
+                <span id="ai-summary">
+                    {{ document.ai_summary|default:"AI summary is not ready yet." }}
+                </span>
+            </p>
 
-                {% if document.ai_summary %}
-                    <p>
-                        <strong>Summary:</strong>
-                        {{ document.ai_summary }}
-                    </p>
-                {% endif %}
-
-                {% if document.ai_suggested_tags %}
-                    <p>
-                        <strong>Suggested tags:</strong>
-                        {% for tag in document.ai_suggested_tags %}
-                            <span class="badge">{{ tag }}</span>
-                        {% endfor %}
-                    </p>
-                {% endif %}
-
-                {% if document.ai_classification_result.confidence %}
-                    <p>
-                        <strong>Confidence:</strong>
-                        {{ document.ai_classification_result.confidence }}
-                    </p>
-                {% endif %}
-
-                {% if document.ai_classification_result.contains_possible_phi %}
-                    <p>
-                        <strong>Possible PHI:</strong>
-                        Yes
-                    </p>
-                {% endif %}
-
-                {% if document.ai_classification_result.reason %}
-                    <p>
-                        <strong>AI reason:</strong>
-                        {{ document.ai_classification_result.reason }}
-                    </p>
-                {% endif %}
-
-                {% if document.ai_classification_status == "failed" and document.ai_classification_result.error %}
-                    <p class="text-danger">
-                        <strong>Error:</strong>
-                        {{ document.ai_classification_result.error }}
-                    </p>
-                {% endif %}
-            </div>
+            <p id="ai-tags-wrapper">
+                <strong>Suggested tags:</strong>
+                <span id="ai-tags">
+                    {% for tag in document.ai_suggested_tags %}
+                        <span class="badge">{{ tag }}</span>
+                            {% empty %}
+                        <span class="muted">No tags yet.</span>
+                    {% endfor %}
+                </span>
+            </p>
         </div>
         
         <h3>Retention</h3>
@@ -142,4 +93,78 @@
         <a class="danger" href="{% url 'vault:document_delete' document.public_id %}" style="display:inline-block; margin-top: 1rem; text-decoration: none;">Delete Document</a>
     </aside>
 </div>
+
+<script>
+    async function checkDocumentStatus() {
+        try {
+            const response = await fetch("{% url 'vault:document_status' document.public_id %}");
+            const data = await response.json();
+
+            const scanStatus = document.getElementById("scan-status");
+            const aiStatus = document.getElementById("ai-status");
+            const aiCategory = document.getElementById("ai-category");
+            const aiSummary = document.getElementById("ai-summary");
+            const aiTags = document.getElementById("ai-tags");
+
+            if (scanStatus) {
+                scanStatus.textContent = data.scan_status_display;
+                scanStatus.className = "badge " + data.scan_status;
+            }
+
+            if (aiStatus) {
+                aiStatus.textContent = data.ai_classification_status;
+                aiStatus.className = "badge " + data.ai_classification_status;
+            }
+
+            if (aiCategory && data.ai_category) {
+                aiCategory.textContent = data.ai_category;
+            }
+
+            if (aiSummary && data.ai_summary) {
+                aiSummary.textContent = data.ai_summary;
+            }
+
+            if (aiTags && data.ai_suggested_tags && data.ai_suggested_tags.length > 0) {
+                aiTags.innerHTML = "";
+
+                data.ai_suggested_tags.forEach(function(tag) {
+                    const badge = document.createElement("span");
+                    badge.className = "badge";
+                    badge.textContent = tag;
+                    aiTags.appendChild(badge);
+                    aiTags.appendChild(document.createTextNode(" "));
+                });
+            }
+
+            const scanStillRunning = data.scan_status === "pending";
+
+            const aiStillRunning = [
+                "not_started",
+                "pending",
+                "processing"
+            ].includes(data.ai_classification_status);
+
+            if (scanStillRunning || aiStillRunning) {
+                setTimeout(checkDocumentStatus, 3000);
+            } else {
+                // Reload once when both are finished so buttons/sections update fully.
+                if (data.scan_status === "clean" && data.ai_classification_status === "completed") {
+                    window.location.reload();
+                }
+            }
+
+        } catch (error) {
+            console.error("Could not check document status:", error);
+            setTimeout(checkDocumentStatus, 5000);
+        }
+    }
+
+    const shouldPoll =
+        "{{ document.scan_status }}" === "pending" ||
+        ["not_started", "pending", "processing"].includes("{{ document.ai_classification_status }}");
+
+    if (shouldPoll) {
+        setTimeout(checkDocumentStatus, 3000);
+    }
+</script>
 {% endblock %}
