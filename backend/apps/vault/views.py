@@ -25,7 +25,6 @@ from .permissions import (
 )
 from .tasks import scan_document_for_virus
 from .utils import calculate_sha256, generate_presigned_download_url
-from .forms import detect_document_type
 
 def _workspace_lists_for_user(user):
     profile = getattr(user, "profile", None)
@@ -171,12 +170,10 @@ def document_upload(request):
         detected = detect_uploaded_file(document.file)
         document.organization = request.user.profile.organization
         document.uploaded_by = request.user
-        document.document_type = detect_document_type(document.file)
+        document.document_type = detected["document_type"]
         document.original_filename = document.file.name
         document.file_size = document.file.size
         document.content_type = getattr(document.file.file, "content_type", "")
-        document.save()
-        form.save_m2m()
 
         facility = document.facility
 
@@ -188,6 +185,7 @@ def document_upload(request):
 
         document.checksum_sha256 = calculate_sha256(document.file)
         document.save()
+        form.save_m2m()
 
         scan_document_for_virus.delay(document.id)
 

@@ -100,10 +100,10 @@
             <span class="muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
             <div class="page-links">
                 {% if page_obj.has_previous %}
-                    <a class="btn secondary" href="?q={{ query }}&type={{ document_type }}&facility={{ facility_id }}&folder={{ folder_id }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                    <a class="btn secondary" href="?q={{ query|urlencode }}&type={{ document_type|urlencode }}&facility={{ facility_id|urlencode }}&folder={{ folder_id|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                    <a class="btn secondary" href="?q={{ query }}&type={{ document_type }}&facility={{ facility_id }}&folder={{ folder_id }}&page={{ page_obj.next_page_number }}">Next</a>
+                    <a class="btn secondary" href="?q={{ query|urlencode }}&type={{ document_type|urlencode }}&facility={{ facility_id|urlencode }}&folder={{ folder_id|urlencode }}&page={{ page_obj.next_page_number }}">Next</a>
                 {% endif %}
             </div>
         </div>

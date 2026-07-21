@@ -14,6 +14,16 @@ This patch improves the current Django/MinIO UI stack without changing the datab
 - Adds pagination to file manager and audit logs.
 - Improves audit log UI.
 
+## Post-review fixes
+
+A code review of this branch found a few issues, since fixed:
+
+- Document uploads now use the sniffed file type from `file_detection.py` (magic bytes/DICOM header/zip contents) instead of a discarded extension-only guess, so `document_type` reflects the file's actual content.
+- Restored the `500 MB` per-file upload size limit in `DocumentUploadForm.clean_file`, which had been dropped, so it matches what the upload page tells users.
+- Pinned `filetype` and `pydicom` in `requirements.txt` (`==1.2.0` / `==3.0.2`) instead of leaving them unversioned like every other dependency in that file.
+- Fixed file manager and audit log pagination links to `|urlencode` the search/filter values, so a query containing `&`, `+`, or `#` no longer corrupts the page-2 URL.
+- Reordered `document_upload` so the folder/facility permission checks run before the document is saved, instead of save-then-check-then-save-again.
+
 ## How to apply
 
 Copy these files into your project, preserving the folder paths.
