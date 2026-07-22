@@ -3,13 +3,21 @@ import io
 import qrcode
 import qrcode.image.svg
 from django.contrib import messages
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_ratelimit.decorators import ratelimit
 
 from apps.audit.utils import write_audit_log
+
+
+@method_decorator(ratelimit(key="ip", rate="10/m", method="POST", block=True), name="post")
+class RateLimitedLoginView(auth_views.LoginView):
+    template_name = "auth/login.html"
 
 
 def _safe_next_url(request, default="vault:dashboard"):

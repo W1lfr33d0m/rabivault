@@ -23,7 +23,7 @@ env = environ.Env(
 environ.Env.read_env(BASE_DIR.parent / ".env")
 
 SECRET_KEY = env("SECRET_KEY", default="dev-secret-key")
-DEBUG = env.bool("DEBUG", default=True)
+DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = env.list(
     "DJANGO_ALLOWED_HOSTS",
@@ -103,6 +103,13 @@ AUTHENTICATION_BACKENDS = [
     "guardian.backends.ObjectPermissionBackend",
 ]
 
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 12}},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
 ANONYMOUS_USER_NAME = None
 
 LANGUAGE_CODE = "en-us"
@@ -161,6 +168,13 @@ DJANGO_USE_HTTPS = env.bool("DJANGO_USE_HTTPS", default=False)
 SESSION_COOKIE_SECURE = DJANGO_USE_HTTPS
 CSRF_COOKIE_SECURE = DJANGO_USE_HTTPS
 SECURE_SSL_REDIRECT = DJANGO_USE_HTTPS
+
+# Automatic logoff after inactivity. SESSION_SAVE_EVERY_REQUEST resets the
+# expiry on each request, so this behaves as an idle timeout rather than a
+# fixed session lifetime.
+SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=30 * 60)
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 # Trust the scheme reported by the reverse proxy. Safe because in production
 # the web container is only reachable through Caddy, never directly from clients.

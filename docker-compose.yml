@@ -80,6 +80,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_KMS_SECRET_KEY: ${MINIO_KMS_SECRET_KEY}
     volumes:
       - rabivault_minio_data:/data
     ports:
@@ -103,7 +104,8 @@ services:
       /bin/sh -c "
       mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} &&
       mc mb --ignore-existing local/$${AWS_STORAGE_BUCKET_NAME} &&
-      echo MinIO bucket ready: $${AWS_STORAGE_BUCKET_NAME}
+      mc encrypt set sse-kms $${MINIO_KMS_SECRET_KEY%%:*} local/$${AWS_STORAGE_BUCKET_NAME} &&
+      echo MinIO bucket ready and encrypted: $${AWS_STORAGE_BUCKET_NAME}
       "
 
   clamav:

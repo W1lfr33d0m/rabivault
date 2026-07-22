@@ -2,7 +2,7 @@
 
 This patch improves the current Django/MinIO UI stack without changing the database structure of documents.
 
-## What it changes
+## 1. Original UI & MinIO improvements
 
 - Fixes `.env.example` so `MINIO_BUCKET_NAME` and `AWS_STORAGE_BUCKET_NAME` both use `rabivault-files`.
 - Adds `.gitignore` rules for local backups and SQL dumps.
@@ -14,7 +14,7 @@ This patch improves the current Django/MinIO UI stack without changing the datab
 - Adds pagination to file manager and audit logs.
 - Improves audit log UI.
 
-## Post-review fixes
+## 2. Post-review fixes (file handling & permissions)
 
 A code review of this branch found a few issues, since fixed:
 
@@ -23,6 +23,34 @@ A code review of this branch found a few issues, since fixed:
 - Pinned `filetype` and `pydicom` in `requirements.txt` (`==1.2.0` / `==3.0.2`) instead of leaving them unversioned like every other dependency in that file.
 - Fixed file manager and audit log pagination links to `|urlencode` the search/filter values, so a query containing `&`, `+`, or `#` no longer corrupts the page-2 URL.
 - Reordered `document_upload` so the folder/facility permission checks run before the document is saved, instead of save-then-check-then-save-again.
+
+## 3. Branding
+
+- Added `backend/static/img/logo.png` (160×160, resized down from a 1.7 MB source image) and a multi-resolution `backend/static/img/favicon.ico`.
+- Sidebar and login-page logos now render the actual shield mark instead of the "RV" text placeholder; a browser-tab favicon was added via `<link rel="icon">` in `base.html`.
+- `.logo-mark` CSS updated to fit an `<img>` (dropped the old gradient-background placeholder styling).
+
+## 4. Production deployment (VPS + Docker Compose + Caddy)
+
+- Added `docker-compose.prod.yml`: runs the same services as `docker-compose.yml` but with Gunicorn instead of `runserver`, no source bind-mounts, and Postgres/Redis/MinIO/ClamAV/Orthanc's HTTP port no longer published publicly — only reachable on the internal Docker network.
+- Added a `caddy` service + `Caddyfile`: reverse-proxies your domain to `web` and an `orthanc.<domain>` subdomain to Orthanc's UI, automatically issuing/renewing Let's Encrypt TLS certificates.
+- Added `gunicorn` and `whitenoise` to `requirements.txt`. Static files are now served by WhiteNoise from inside the `web` container (`CompressedManifestStaticFilesStorage`), so no shared static volume is needed with Caddy.
+- `settings.py`: added a `DJANGO_USE_HTTPS` env flag gating `SESSION_COOKIE_SECURE`/`CSRF_COOKIE_SECURE`/`SECURE_SSL_REDIRECT` (defaults to off, so local HTTP dev is unaffected), `SECURE_PROXY_SSL_HEADER` to trust Caddy's `X-Forwarded-Proto`, and `CSRF_TRUSTED_ORIGINS`.
+- Added `DEPLOY.md`: step-by-step guide for provisioning a VPS, pointing DNS, configuring the firewall, filling in `.env`, deploying, creating an admin user, and setting up backups.
+
+## 5. HIPAA-oriented security hardening
+
+Technical-safeguard gaps found in a HIPAA-focused review, since fixed. (Full HIPAA compliance also requires a signed Business Associate Agreement with your host, a formal risk analysis, and written workforce policies — none of which are code changes.)
+
+- MFA is now required for **every** user/role, not just `platform_admin`/`org_admin`/`facility_manager`/`auditor` (`apps/accounts/decorators.py`) — previously `staff` and `external_reviewer` accounts could upload/view/download documents without MFA.
+- Login is now rate-limited (10 attempts/minute per IP) via `RateLimitedLoginView` (`apps/accounts/views.py`, wired in `config/urls.py`), closing a brute-force gap the existing per-user rate limits on upload/download/audit-list didn't cover.
+- Added Django's standard password strength validators with a 12-character minimum (`AUTH_PASSWORD_VALIDATORS` — previously unset).
+- Added a 30-minute idle session timeout: `SESSION_COOKIE_AGE` + `SESSION_SAVE_EVERY_REQUEST` (resets on each request) + `SESSION_EXPIRE_AT_BROWSER_CLOSE`.
+- Fixed `get_client_ip()` in `apps/audit/utils.py` to use the *last* `X-Forwarded-For` entry (the one appended by Caddy) instead of the client-spoofable first one, protecting the integrity of the tamper-evident audit trail.
+- Enabled MinIO's built-in KMS plus bucket-level default encryption (`MINIO_KMS_SECRET_KEY` + `mc encrypt set sse-kms` in `minio-init`), so uploaded documents are encrypted at rest transparently — verified against the actual running MinIO release before rolling out.
+- `DEBUG` now defaults to `False` if the env var is ever missing, instead of `True` — the previous default could leak PHI in stack traces on a misconfigured deploy.
+- Backups are now GPG-encrypted: `backup/Dockerfile` layers `gnupg` onto `postgres:16`, and `DEPLOY.md`'s cron example pipes `pg_dump` through AES-256 symmetric encryption using `BACKUP_ENCRYPTION_KEY` instead of writing a plain `.sql` file.
+- New required `.env` values for the above: `MINIO_KMS_SECRET_KEY` and `BACKUP_ENCRYPTION_KEY` (generation commands are in `.env.example`).
 
 ## How to apply
 
@@ -42,6 +70,8 @@ docker compose exec web python manage.py migrate
 docker compose exec web python manage.py ensure_minio_bucket
 docker compose exec web python manage.py findstatic css/app.css
 ```
+
+For a production deployment, use `docker-compose.prod.yml` instead — see `DEPLOY.md` for the full walkthrough (DNS, firewall, `.env`, TLS, backups).
 
 ## Important cleanup
 

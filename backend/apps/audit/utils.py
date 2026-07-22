@@ -4,10 +4,18 @@ from .models import AuditLog
 
 
 def get_client_ip(request):
+    # Only the entry appended by our own reverse proxy (Caddy, sitting
+    # directly in front of this app) can be trusted. Everything earlier in
+    # the header is client-supplied and can be spoofed, so take the last
+    # entry rather than the first. This assumes exactly one trusted proxy
+    # hop; revisit if another proxy/CDN is ever added in front of Caddy.
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
 
     if x_forwarded_for:
-        return x_forwarded_for.split(",")[0].strip()
+        ips = [ip.strip() for ip in x_forwarded_for.split(",") if ip.strip()]
+
+        if ips:
+            return ips[-1]
 
     return request.META.get("REMOTE_ADDR")
 

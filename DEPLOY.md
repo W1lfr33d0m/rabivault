@@ -94,12 +94,17 @@ docker compose -f docker-compose.prod.yml up -d --build
 ## 6. Backups
 
 The `backup` container mounts `./backups` and stays idle (`sleep infinity`)
-so you can run `pg_dump` inside it on a schedule, e.g. via a host cron job:
+so you can run `pg_dump` inside it on a schedule, e.g. via a host cron job. A
+database dump is ePHI at rest just like the live database, so pipe it through
+GPG symmetric encryption using `BACKUP_ENCRYPTION_KEY` from `.env` rather than
+writing a plain `.sql` file:
 
 ```bash
-0 3 * * * docker compose -f /path/to/rabivault/docker-compose.prod.yml exec -T backup \
-  pg_dump -h db -U $POSTGRES_USER -d $POSTGRES_DB > /path/to/rabivault/backups/db-$(date +\%F).sql
+0 3 * * * docker compose -f /path/to/rabivault/docker-compose.prod.yml exec -T backup sh -c \
+  'pg_dump -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB" | gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$BACKUP_ENCRYPTION_KEY" -o /backups/db-$(date +%F).sql.gpg'
 ```
+
+To restore: `gpg --batch --passphrase "$BACKUP_ENCRYPTION_KEY" -d /backups/db-2026-07-22.sql.gpg | psql -h db -U $POSTGRES_USER -d $POSTGRES_DB`.
 
 Also snapshot the named Docker volumes (`rabivault_postgres_data`,
 `rabivault_minio_data`, `rabivault_orthanc_data`) at the infrastructure level
