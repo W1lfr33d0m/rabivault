@@ -64,10 +64,8 @@ a:hover {
 .logo-mark {
     width: 42px;
     height: 42px;
-    display: grid;
-    place-items: center;
     border-radius: 14px;
-    background: linear-gradient(135deg, #2563eb, #0f766e);
+    object-fit: cover;
     box-shadow: 0 10px 30px rgba(37, 99, 235, 0.35);
 }
 

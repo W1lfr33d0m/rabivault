@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}RabiVault{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
 </head>
 <body class="{% block body_class %}{% if user.is_authenticated %}app-page{% else %}login-page{% endif %}{% endblock %}">
@@ -13,7 +14,7 @@
             <aside class="sidebar">
                 <div>
                     <div class="logo">
-                        <div class="logo-mark">RV</div>
+                        <img class="logo-mark" src="{% static 'img/logo.png' %}" alt="RabiVault">
                         <span>RabiVault</span>
                     </div>
                     <p class="sidebar-subtitle">Secure document vault for medical facilities.</p>

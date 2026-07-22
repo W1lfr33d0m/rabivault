@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Login · RabiVault{% endblock %}
 
@@ -6,7 +7,7 @@
 <div class="login-shell">
     <section class="login-hero">
         <div class="logo">
-            <div class="logo-mark">RV</div>
+            <img class="logo-mark" src="{% static 'img/logo.png' %}" alt="RabiVault">
             <span>RabiVault</span>
         </div>
         <h1>Secure access for medical document management.</h1>
