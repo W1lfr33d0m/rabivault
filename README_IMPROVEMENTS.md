@@ -2,6 +2,23 @@
 
 This patch improves the current Django/MinIO UI stack without changing the database structure of documents.
 
+## Website features
+
+A Django-based secure document vault for medical organizations, multi-tenant across organizations and facilities.
+
+- **Document vault** — upload, browse, and search documents; organize into folders; comma-separated tagging; per-document metadata (title, category, facility, expiry/retention dates). File type is detected from actual file content (magic bytes/DICOM header/zip contents), not just the extension, with a `500 MB` per-file limit and an allow-list of extensions.
+- **Antivirus scanning** — every upload is scanned by ClamAV before it's usable; documents show a scan status (pending/clean/failed).
+- **Integrity & lifecycle** — SHA-256 checksum on upload, soft-delete with restore, retention/expiry dates per document.
+- **Access control** — role-based permissions (`platform_admin`, `org_admin`, `facility_manager`, `staff`, `external_reviewer`, `auditor`) scoped to organization and facility, with object-level checks (django-guardian) before view/upload/download.
+- **MFA** — TOTP-based two-factor authentication (QR code enrollment via `django-otp`), required for every user before sensitive actions.
+- **Login security** — rate-limited login (brute-force protection), Django password-strength validation, 30-minute idle session timeout, CSRF protection on every form.
+- **Audit logging** — tamper-evident, hash-chained log of logins, views, downloads, uploads, deletes, restores, permission changes, and MFA events, with actor/IP/user-agent capture; filterable, paginated audit log UI for compliance review.
+- **DICOM / medical imaging** — Orthanc PACS server integration for receiving and viewing DICOM studies (DICOM protocol + web viewer), with imaging-study metadata (modality, study date, patient identifier, accession number, UID) tracked against documents.
+- **Compliance record-keeping** (Django-admin managed) — Business Associate Agreement tracking, per-document-type retention policies, periodic access reviews, and security-incident logging.
+- **Backups** — scheduled, GPG-encrypted PostgreSQL backups, with a model for logging backup-restore test results.
+- **Storage** — S3-compatible object storage (MinIO), with server-side encryption at rest for stored documents.
+- **Deployment** — Docker Compose for local development; a separate production Compose file with Gunicorn, WhiteNoise, and a Caddy reverse proxy for automatic HTTPS on a VPS.
+
 ## 1. Original UI & MinIO improvements
 
 - Fixes `.env.example` so `MINIO_BUCKET_NAME` and `AWS_STORAGE_BUCKET_NAME` both use `rabivault-files`.
