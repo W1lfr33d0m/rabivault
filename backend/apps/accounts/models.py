@@ -37,6 +37,11 @@ class UserProfile(models.Model):
     mfa_enabled = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
 
+    can_access_orthanc = models.BooleanField(
+        default=False,
+        help_text="Grants access to the Orthanc imaging viewer link in the sidebar.",
+    )
+
     def __str__(self):
         return f"{self.user.username} - {self.role}"
 
@@ -47,3 +52,7 @@ class UserProfile(models.Model):
     @property
     def is_org_admin(self):
         return self.role == "org_admin"
+
+    @property
+    def can_view_orthanc_link(self):
+        return self.active and (self.is_platform_admin or self.can_access_orthanc)

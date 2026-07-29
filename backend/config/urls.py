@@ -29,4 +29,5 @@ urlpatterns = [
 
     path("", include("apps.vault.urls")),
     path("", include("apps.audit.urls")),
+    path("", include("apps.imaging.urls")),
 ]

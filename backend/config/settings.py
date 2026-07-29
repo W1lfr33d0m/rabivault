@@ -152,6 +152,11 @@ STORAGES = {
 CLAMAV_HOST = env("CLAMAV_HOST", default="clamav")
 CLAMAV_PORT = env.int("CLAMAV_PORT", default=3310)
 
+# Public URL of the Orthanc web UI that the sidebar link redirects to. Local
+# dev talks to the container's published port directly; production points at
+# the orthanc.<domain> hostname that Caddy terminates TLS for (see DEPLOY.md).
+ORTHANC_URL = env("ORTHANC_URL", default="http://localhost:8042")
+
 # Celery
 CELERY_BROKER_URL = "redis://redis:6379/0"
 CELERY_RESULT_BACKEND = "redis://redis:6379/1"

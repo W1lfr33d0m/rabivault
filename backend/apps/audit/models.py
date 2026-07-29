@@ -20,6 +20,7 @@ class AuditLog(models.Model):
         ("mfa_enabled", "MFA Enabled"),
         ("mfa_verified", "MFA Verified"),
         ("export_package", "Export Package"),
+        ("access_imaging_viewer", "Access Imaging Viewer"),
     ]
 
     organization = models.ForeignKey(
