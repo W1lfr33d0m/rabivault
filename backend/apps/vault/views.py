@@ -1,9 +1,11 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django_ratelimit.decorators import ratelimit
 
@@ -20,11 +22,25 @@ from .permissions import (
     documents_for_user,
     user_can_access_facility,
     user_can_download_document,
+    user_can_manage_document,
     user_can_upload_document,
     user_can_view_document,
 )
 from .tasks import scan_document_for_virus
 from .utils import calculate_sha256, generate_presigned_download_url
+
+def _search_documents(qs, query):
+    query = (query or "").strip()
+
+    if not query:
+        return qs
+
+    return qs.filter(
+        Q(title__icontains=query) |
+        Q(original_filename__icontains=query) |
+        Q(checksum_sha256__icontains=query)
+    )
+
 
 def _workspace_lists_for_user(user):
     profile = getattr(user, "profile", None)
@@ -67,45 +83,23 @@ def vault_dashboard(request):
 
 @login_required
 def document_list(request):
-    docs = documents_for_user(request.user).filter(status="active")
-
-    query = request.GET.get("q", "").strip()
-    document_type = request.GET.get("type", "")
-    facility_id = request.GET.get("facility", "")
-    folder_id = request.GET.get("folder", "")
-
-    if query:
-        docs = docs.filter(
-            Q(title__icontains=query) |
-            Q(original_filename__icontains=query) |
-            Q(checksum_sha256__icontains=query)
-        )
-
-    if document_type:
-        docs = docs.filter(document_type=document_type)
-
-    if facility_id:
-        docs = docs.filter(facility_id=facility_id)
-
-    if folder_id:
-        docs = docs.filter(folder_id=folder_id)
-
-    facilities, folders = _workspace_lists_for_user(request.user)
-
-    docs = docs.select_related("organization", "facility", "folder", "uploaded_by")
-    paginator = Paginator(docs, 25)
-    page_obj = paginator.get_page(request.GET.get("page"))
+    vault_config = {
+        "urls": {
+            "tree": reverse("vault:api_folder_tree"),
+            "contents": reverse("vault:api_folder_contents"),
+            "documentMove": reverse("vault:api_document_move"),
+            "documentRename": reverse("vault:api_document_rename"),
+            "folderMove": reverse("vault:api_folder_move"),
+            "folderRename": reverse("vault:api_folder_rename"),
+            "folderDelete": reverse("vault:api_folder_delete"),
+            "documentUpload": reverse("vault:document_upload"),
+            "folderCreate": reverse("vault:folder_create"),
+        },
+        "initialFolderId": request.GET.get("folder", "").strip() or None,
+    }
 
     context = {
-        "documents": page_obj.object_list,
-        "page_obj": page_obj,
-        "query": query,
-        "document_type": document_type,
-        "facility_id": facility_id,
-        "folder_id": folder_id,
-        "facilities": facilities,
-        "folders": folders,
-        "document_type_choices": Document.DOCUMENT_TYPE_CHOICES,
+        "vault_config_json": json.dumps(vault_config),
     }
 
     return render(request, "vault/document_list.html", context)
@@ -152,7 +146,7 @@ def document_upload(request):
     if request.method == "POST":
         form = DocumentUploadForm(request.POST, request.FILES)
     else:
-        form = DocumentUploadForm()
+        form = DocumentUploadForm(initial={"folder": request.GET.get("folder") or None})
 
     form.fields["facility"].queryset = Facility.objects.filter(
         organization=organization,
@@ -204,7 +198,12 @@ def document_upload(request):
         messages.success(request, "Document uploaded successfully. Antivirus scanning has been queued.")
         return redirect("vault:document_detail", public_id=document.public_id)
 
-    return render(request, "vault/document_upload.html", {"form": form})
+    template_name = (
+        "vault/_upload_form.html"
+        if request.headers.get("X-Requested-With")
+        else "vault/document_upload.html"
+    )
+    return render(request, template_name, {"form": form})
 
 
 @login_required
@@ -225,7 +224,7 @@ def folder_create(request):
     if request.method == "POST":
         form = VaultFolderForm(request.POST)
     else:
-        form = VaultFolderForm()
+        form = VaultFolderForm(initial={"parent": request.GET.get("parent") or None})
 
     form.fields["facility"].queryset = Facility.objects.filter(organization=organization, active=True)
     form.fields["parent"].queryset = VaultFolder.objects.filter(organization=organization)
@@ -297,12 +296,7 @@ def document_download(request, public_id):
 def document_delete(request, public_id):
     document = get_object_or_404(Document, public_id=public_id)
 
-    if not user_can_view_document(request.user, document):
-        raise PermissionDenied("You do not have access to this document.")
-
-    profile = request.user.profile
-
-    if profile.role not in ["platform_admin", "org_admin", "facility_manager"]:
+    if not user_can_manage_document(request.user, document):
         raise PermissionDenied("You do not have permission to delete documents.")
 
     if request.method == "POST":

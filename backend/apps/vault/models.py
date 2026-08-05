@@ -45,6 +45,19 @@ class VaultFolder(models.Model):
     def __str__(self):
         return self.name
 
+    def get_descendant_ids(self):
+        descendant_ids = set()
+        frontier = [self.id]
+
+        while frontier:
+            children_ids = list(
+                VaultFolder.objects.filter(parent_id__in=frontier).values_list("id", flat=True)
+            )
+            frontier = [child_id for child_id in children_ids if child_id not in descendant_ids]
+            descendant_ids.update(frontier)
+
+        return descendant_ids
+
 
 class Document(models.Model):
     STATUS_CHOICES = [

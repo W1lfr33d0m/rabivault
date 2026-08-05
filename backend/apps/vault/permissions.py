@@ -101,6 +101,42 @@ def user_can_upload_document(user, organization, facility=None):
 
     return False
 
+def user_can_manage_document(user, document):
+    if not user_can_view_document(user, document):
+        return False
+
+    profile = get_user_profile(user)
+
+    return profile.role in ["platform_admin", "org_admin", "facility_manager"]
+
+
+def user_can_manage_folder(user, folder):
+    if not user.is_authenticated:
+        return False
+
+    profile = get_user_profile(user)
+
+    if not profile or not profile.active:
+        return False
+
+    if profile.role == "platform_admin":
+        return True
+
+    if profile.organization_id != folder.organization_id:
+        return False
+
+    if profile.role == "org_admin":
+        return True
+
+    if profile.role != "facility_manager":
+        return False
+
+    if not folder.facility_id:
+        return False
+
+    return user_can_access_facility(user, folder.facility)
+
+
 def user_can_download_document(user, document):
     if not user_can_view_document(user, document):
         return False

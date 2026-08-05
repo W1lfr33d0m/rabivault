@@ -5,8 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}RabiVault{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% block extra_head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% if user.is_authenticated %}app-page{% else %}login-page{% endif %}{% endblock %}">
     {% if user.is_authenticated %}
