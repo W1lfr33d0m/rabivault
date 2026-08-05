@@ -1,12 +1,8 @@
 # Deploying RabiVault to a VPS
 
-This runs the existing Docker Compose stack on any Ubuntu VPS (DigitalOcean,
-Hetzner, AWS Lightsail, etc.) with Caddy in front for automatic HTTPS. No
-managed services required — everything (Postgres, MinIO, ClamAV, Orthanc)
-runs in containers on the same box.
+This runs the existing Docker Compose stack on any Ubuntu VPS (DigitalOcean, Hetzner, AWS Lightsail, etc.) with Caddy in front for automatic HTTPS. No managed services required — everything (Postgres, MinIO, ClamAV, Orthanc) runs in containers on the same box.
 
-Recommended minimum size: 2 vCPU / 4 GB RAM (ClamAV's virus database alone
-needs ~1-1.5 GB resident).
+Recommended minimum size: 2 vCPU / 4 GB RAM (ClamAV's virus database alone needs ~1-1.5 GB resident).
 
 ## 1. Point DNS at the server
 
@@ -119,5 +115,4 @@ actual uploaded documents and DICOM studies, not just the database.
 - `docker-compose.prod.yml` is the production variant: Gunicorn instead of
   `runserver`, no source bind-mounts, no public ports on Postgres/Redis/MinIO/
   ClamAV/Orthanc's HTTP port, and a Caddy container terminating TLS.
-- Static files are served by WhiteNoise from inside the `web` container, so
-  no static-file volume needs to be shared with Caddy.
+- Static files are served by WhiteNoise from inside the `web` container, so no static-file volume needs to be shared with Caddy.
