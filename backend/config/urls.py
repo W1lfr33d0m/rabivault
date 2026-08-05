@@ -20,6 +20,10 @@ from django.contrib.auth import views as auth_views
 
 from apps.accounts.views import RateLimitedLoginView
 
+admin.site.site_header = "RabiVault Admin"
+admin.site.site_title = "RabiVault Admin"
+admin.site.index_title = "Platform Administration"
+
 urlpatterns = [
     path("admin/", admin.site.urls),
 

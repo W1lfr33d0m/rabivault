@@ -1,0 +1,122 @@
+/* Re-skins the stock Django admin to match RabiVault's brand (see app.css)
+   by overriding the CSS custom properties admin/css/base.css exposes,
+   rather than fighting its layout rules. */
+
+:root, html[data-theme="light"] {
+    --primary: #1d4ed8;
+    --secondary: #0b1220;
+    --accent: #dbeafe;
+    --primary-fg: #fff;
+
+    --body-fg: #0f172a;
+    --body-bg: #fff;
+    --body-quiet-color: #64748b;
+    --body-loud-color: #0f172a;
+
+    --header-color: #cbd5e1;
+    --header-branding-color: #fff;
+    --header-bg: #0b1220;
+    --header-link-color: #fff;
+
+    --breadcrumbs-fg: #dbeafe;
+    --breadcrumbs-link-fg: #fff;
+    --breadcrumbs-bg: #1e3a8a;
+
+    --link-fg: #1d4ed8;
+    --link-hover-color: #1e3a8a;
+    --link-selected-fg: #1d4ed8;
+
+    --hairline-color: #dbe3ef;
+    --border-color: #dbe3ef;
+
+    --error-fg: #b91c1c;
+
+    --message-success-bg: #dcfce7;
+    --message-warning-bg: #fef3c7;
+    --message-error-bg: #fee2e2;
+
+    --darkened-bg: #f8fafc;
+    --selected-bg: #dbeafe;
+    --selected-row: #fef3c7;
+
+    --button-fg: #fff;
+    --button-bg: #1d4ed8;
+    --button-hover-bg: #1e3a8a;
+    --default-button-bg: #1d4ed8;
+    --default-button-hover-bg: #1e3a8a;
+    --close-button-bg: #64748b;
+    --close-button-hover-bg: #334155;
+    --delete-button-bg: #b91c1c;
+    --delete-button-hover-bg: #7f1d1d;
+
+    --font-family-primary: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+    html[data-theme="auto"] {
+        --primary: #1e3a8a;
+        --body-fg: #e2e8f0;
+        --body-bg: #0f172a;
+        --body-quiet-color: #94a3b8;
+        --darkened-bg: #111827;
+        --selected-bg: #1e293b;
+        --border-color: #1e293b;
+        --hairline-color: #1e293b;
+        --link-fg: #60a5fa;
+        --link-hover-color: #93c5fd;
+    }
+}
+
+html[data-theme="dark"] {
+    --primary: #1e3a8a;
+    --body-fg: #e2e8f0;
+    --body-bg: #0f172a;
+    --body-quiet-color: #94a3b8;
+    --darkened-bg: #111827;
+    --selected-bg: #1e293b;
+    --border-color: #1e293b;
+    --hairline-color: #1e293b;
+    --link-fg: #60a5fa;
+    --link-hover-color: #93c5fd;
+}
+
+#header {
+    padding: 0.9rem 1.4rem;
+}
+
+#branding .rabivault-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-size: 1.2rem;
+    color: var(--header-branding-color);
+}
+
+#branding .rabivault-brand:hover {
+    text-decoration: none;
+}
+
+.rabivault-brand-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    object-fit: cover;
+}
+
+div.breadcrumbs {
+    font-weight: 600;
+}
+
+.module h2, .module caption, .inline-group h2 {
+    border-radius: 0;
+}
+
+.button, input[type="submit"], input[type="button"], .submit-row input, a.button {
+    border-radius: 10px;
+}
+
+.object-tools a {
+    border-radius: 10px;
+}
