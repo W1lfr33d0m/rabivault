@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Imaging · RabiVault{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Imaging</p>
+        <h1>Studies</h1>
+        <p class="page-description">Studies visible to your organization and facilities. Opening a study or the full viewer mints a scoped, short-lived Orthanc session limited to what you can see here.</p>
+    </div>
+    <div class="actions">
+        <a class="btn" href="{% url 'imaging:orthanc_redirect' %}" target="_blank" rel="noopener noreferrer">Open Full Viewer</a>
+    </div>
+</div>
+
+<div class="card">
+    <form class="filter-bar" method="get">
+        <div>
+            <label for="facility">Facility</label>
+            <select id="facility" name="facility">
+                <option value="">All facilities</option>
+                {% for facility in facilities %}
+                    <option value="{{ facility.id }}" {% if facility_id == facility.id|stringformat:"s" %}selected{% endif %}>{{ facility.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Filter</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Study</th>
+                    <th>Modality</th>
+                    <th>Facility</th>
+                    <th>Study Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for study in studies %}
+                    <tr>
+                        <td>
+                            {{ study.study_description|default:"Untitled study" }}<br>
+                            <span class="muted">{{ study.patient_identifier|default:"No patient identifier" }}</span>
+                        </td>
+                        <td>{{ study.modality|default:"-" }}</td>
+                        <td>{{ study.facility|default:"Organization-level" }}</td>
+                        <td>{{ study.study_date|date:"M j, Y"|default:"-" }}</td>
+                        <td>
+                            <a class="btn secondary" href="{% url 'imaging:study_open' study.pk %}" target="_blank" rel="noopener noreferrer">Open</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="empty-state">No imaging studies found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination">
+            <span class="muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            <div class="page-links">
+                {% if page_obj.has_previous %}
+                    <a class="btn secondary" href="?facility={{ facility_id|urlencode }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a class="btn secondary" href="?facility={{ facility_id|urlencode }}&page={{ page_obj.next_page_number }}">Next</a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -157,6 +157,29 @@ CLAMAV_PORT = env.int("CLAMAV_PORT", default=3310)
 # the orthanc.<domain> hostname that Caddy terminates TLS for (see DEPLOY.md).
 ORTHANC_URL = env("ORTHANC_URL", default="http://localhost:8042")
 
+# URL this Django process itself should use to reach Orthanc's REST API
+# (label management, etc). Usually the docker-compose service name rather
+# than the public-facing ORTHANC_URL.
+ORTHANC_INTERNAL_URL = env("ORTHANC_INTERNAL_URL", default="http://orthanc:8042")
+
+# Orthanc's core HTTP authentication is disabled (see docker-compose.yml) in
+# favor of its Authorization plugin, which delegates every access decision to
+# the webhooks in apps/imaging/views.py. These two secrets are the two ends
+# of that trust relationship:
+#   - ORTHANC_SERVICE_TOKEN: sent by *this app* (apps/imaging/orthanc_client.py)
+#     as the "token" header on its own REST calls to Orthanc; recognized by
+#     our own get-profile webhook as an all-access service identity.
+#   - ORTHANC_WEBHOOK_USERNAME/PASSWORD: sent by *Orthanc* as HTTP Basic Auth
+#     on every call it makes back into our webhooks, so we can reject calls
+#     that don't come from our own Orthanc instance.
+ORTHANC_SERVICE_TOKEN = env("ORTHANC_SERVICE_TOKEN", default="")
+ORTHANC_WEBHOOK_USERNAME = env("ORTHANC_WEBHOOK_USERNAME", default="")
+ORTHANC_WEBHOOK_PASSWORD = env("ORTHANC_WEBHOOK_PASSWORD", default="")
+
+# How long a minted Orthanc viewer session token stays valid after a user
+# opens the imaging viewer. Long enough for a single review session.
+IMAGING_TOKEN_LIFETIME_SECONDS = env.int("IMAGING_TOKEN_LIFETIME_SECONDS", default=4 * 60 * 60)
+
 # Celery
 CELERY_BROKER_URL = "redis://redis:6379/0"
 CELERY_RESULT_BACKEND = "redis://redis:6379/1"

@@ -16,3 +16,5 @@ filetype==1.2.0
 pydicom==3.0.2
 gunicorn==22.0.0
 whitenoise==6.7.0
+requests==2.32.3
+uvicorn[standard]==0.30.1

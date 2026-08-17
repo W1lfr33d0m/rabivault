@@ -2,11 +2,14 @@ services:
   web:
     build: ./backend
     container_name: rabivault_web
+    # See docker-compose.yml for why this is ASGI (uvicorn worker) rather
+    # than plain WSGI gunicorn - Orthanc's Authorization plugin webhooks
+    # need chunked request body support that WSGI doesn't have.
     command: >
       sh -c "python manage.py migrate &&
              python manage.py ensure_minio_bucket &&
              python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+             gunicorn config.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 3"
     expose:
       - "8000"
     env_file:
@@ -130,9 +133,17 @@ services:
       - .env
     environment:
       ORTHANC__NAME: "RabiVault Orthanc"
-      ORTHANC__AUTHENTICATION_ENABLED: "true"
-      ORTHANC__REGISTERED_USERS: |-
-        {"${ORTHANC_USERNAME}":"${ORTHANC_PASSWORD}"}
+      # See docker-compose.yml for why core auth is off in favor of the
+      # Authorization plugin - same tenant isolation, same webhooks, just
+      # reached through Caddy (orthanc.<domain>) instead of a published port.
+      ORTHANC__AUTHENTICATION_ENABLED: "false"
+      AUTHORIZATION_PLUGIN_ENABLED: "true"
+      ORTHANC__AUTHORIZATION__WEB_SERVICE_ROOT_URL: "http://web:8000/imaging/orthanc-auth/"
+      ORTHANC__AUTHORIZATION__WEB_SERVICE_USERNAME: "${ORTHANC_WEBHOOK_USERNAME}"
+      ORTHANC__AUTHORIZATION__WEB_SERVICE_PASSWORD: "${ORTHANC_WEBHOOK_PASSWORD}"
+      ORTHANC__AUTHORIZATION__STANDARD_CONFIGURATIONS: '["orthanc-explorer-2"]'
+      ORTHANC__AUTHORIZATION__CHECKED_LEVEL: "studies"
+      ORTHANC__AUTHORIZATION__TOKEN_HTTP_HEADERS: '["token"]'
       ORTHANC__REMOTE_ACCESS_ALLOWED: "true"
       ORTHANC__DICOM_SERVER_ENABLED: "true"
       ORTHANC__DICOM_AET: "${ORTHANC_AET}"

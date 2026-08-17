@@ -48,12 +48,13 @@ cp .env.example .env
 Edit `.env`:
 
 - Set real, unique values for `SECRET_KEY`, `POSTGRES_PASSWORD`,
-  `MINIO_ROOT_PASSWORD`/`AWS_SECRET_ACCESS_KEY`, `ORTHANC_PASSWORD`.
+  `MINIO_ROOT_PASSWORD`/`AWS_SECRET_ACCESS_KEY`, `ORTHANC_SERVICE_TOKEN`,
+  `ORTHANC_WEBHOOK_PASSWORD`.
 - Uncomment and fill in the production block at the top:
   ```
   DOMAIN=vault.example.com
   DJANGO_USE_HTTPS=True
-  DJANGO_ALLOWED_HOSTS=vault.example.com
+  DJANGO_ALLOWED_HOSTS=vault.example.com,web
   CSRF_TRUSTED_ORIGINS=https://vault.example.com,https://orthanc.vault.example.com
   ```
 - Set `DEBUG=False`.

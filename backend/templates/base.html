@@ -32,7 +32,7 @@
                     {% if user.profile.can_view_orthanc_link %}
                     <p class="nav-section-label">Imaging</p>
                     <div class="nav-list">
-                        <a class="nav-link" href="{% url 'imaging:orthanc_redirect' %}" target="_blank" rel="noopener noreferrer">Orthanc Viewer</a>
+                        <a class="nav-link" href="{% url 'imaging:study_list' %}">Studies</a>
                     </div>
                     {% endif %}
 

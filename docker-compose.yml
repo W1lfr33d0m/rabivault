@@ -2,10 +2,15 @@ services:
   web:
     build: ./backend
     container_name: rabivault_web
+    # Runs under ASGI (not `manage.py runserver`/WSGI): Orthanc's Authorization
+    # plugin POSTs its webhook callbacks (apps/imaging/views.py) with
+    # Transfer-Encoding: chunked, and WSGI has no way to read a request body
+    # that isn't Content-Length-framed - the body just comes through empty.
+    # ASGI's HTTP/1.1 parsing handles chunked bodies natively.
     command: >
       sh -c "python manage.py migrate &&
              python manage.py ensure_minio_bucket &&
-             python manage.py runserver 0.0.0.0:8000"
+             uvicorn config.asgi:application --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - ./backend:/app
     ports:
@@ -135,9 +140,22 @@ services:
       - .env
     environment:
       ORTHANC__NAME: "RabiVault Orthanc"
-      ORTHANC__AUTHENTICATION_ENABLED: "true"
-      ORTHANC__REGISTERED_USERS: |-
-        {"${ORTHANC_USERNAME}":"${ORTHANC_PASSWORD}"}
+      # Orthanc's own username/password login is off. Every request -
+      # including from the OE2 viewer UI - is instead authorized per-request
+      # by the Authorization plugin below, which asks Django's
+      # /imaging/orthanc-auth/ webhooks (apps/imaging/views.py) who the
+      # caller is and which organizations/facilities' studies they may see.
+      # This is what makes the imaging viewer tenant-isolated the same way
+      # the file manager is: nothing is reachable without a Django-issued,
+      # per-user, label-scoped token.
+      ORTHANC__AUTHENTICATION_ENABLED: "false"
+      AUTHORIZATION_PLUGIN_ENABLED: "true"
+      ORTHANC__AUTHORIZATION__WEB_SERVICE_ROOT_URL: "http://web:8000/imaging/orthanc-auth/"
+      ORTHANC__AUTHORIZATION__WEB_SERVICE_USERNAME: "${ORTHANC_WEBHOOK_USERNAME}"
+      ORTHANC__AUTHORIZATION__WEB_SERVICE_PASSWORD: "${ORTHANC_WEBHOOK_PASSWORD}"
+      ORTHANC__AUTHORIZATION__STANDARD_CONFIGURATIONS: '["orthanc-explorer-2"]'
+      ORTHANC__AUTHORIZATION__CHECKED_LEVEL: "studies"
+      ORTHANC__AUTHORIZATION__TOKEN_HTTP_HEADERS: '["token"]'
       ORTHANC__REMOTE_ACCESS_ALLOWED: "true"
       ORTHANC__DICOM_SERVER_ENABLED: "true"
       ORTHANC__DICOM_AET: "${ORTHANC_AET}"
