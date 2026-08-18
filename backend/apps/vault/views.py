@@ -96,6 +96,9 @@ def document_list(request):
     paginator = Paginator(docs, 25)
     page_obj = paginator.get_page(request.GET.get("page"))
 
+    profile = getattr(request.user, "profile", None)
+    can_bulk_delete = bool(profile) and profile.role in ["platform_admin", "org_admin", "facility_manager"]
+
     context = {
         "documents": page_obj.object_list,
         "page_obj": page_obj,
@@ -106,6 +109,7 @@ def document_list(request):
         "facilities": facilities,
         "folders": folders,
         "document_type_choices": Document.DOCUMENT_TYPE_CHOICES,
+        "can_bulk_delete": can_bulk_delete,
     }
 
     return render(request, "vault/document_list.html", context)
@@ -320,3 +324,68 @@ def document_delete(request, public_id):
         return redirect("vault:document_list")
 
     return render(request, "vault/document_confirm_delete.html", {"document": document})
+
+
+@login_required
+@mfa_required
+def document_bulk_delete(request):
+    if request.method != "POST":
+        return redirect("vault:document_list")
+
+    public_ids = request.POST.getlist("document_ids")
+
+    if not public_ids:
+        messages.error(request, "No documents were selected.")
+        return redirect("vault:document_list")
+
+    profile = request.user.profile
+    can_delete_role = profile.role in ["platform_admin", "org_admin", "facility_manager"]
+
+    documents = Document.objects.filter(public_id__in=public_ids, status="active")
+    allowed_documents = [
+        document for document in documents
+        if can_delete_role and user_can_view_document(request.user, document)
+    ]
+
+    if request.POST.get("confirm") == "1":
+        for document in allowed_documents:
+            document.soft_delete(user=request.user)
+
+            write_audit_log(
+                request=request,
+                action="delete_document",
+                object_type="Document",
+                object_id=document.public_id,
+                metadata={"title": document.title, "bulk": True},
+            )
+
+        deleted_count = len(allowed_documents)
+        skipped_count = len(public_ids) - deleted_count
+
+        if deleted_count:
+            messages.success(
+                request,
+                f"Deleted {deleted_count} document{'s' if deleted_count != 1 else ''}.",
+            )
+
+        if skipped_count:
+            messages.error(
+                request,
+                f"{skipped_count} document{'s' if skipped_count != 1 else ''} could not be deleted "
+                "(no permission, or already removed).",
+            )
+
+        return redirect("vault:document_list")
+
+    if not allowed_documents:
+        messages.error(request, "You do not have permission to delete the selected documents.")
+        return redirect("vault:document_list")
+
+    return render(
+        request,
+        "vault/document_confirm_bulk_delete.html",
+        {
+            "documents": allowed_documents,
+            "skipped_count": len(public_ids) - len(allowed_documents),
+        },
+    )

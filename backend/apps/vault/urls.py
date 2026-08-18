@@ -11,4 +11,5 @@ urlpatterns = [
     path("documents/<uuid:public_id>/", views.document_detail, name="document_detail"),
     path("documents/<uuid:public_id>/download/", views.document_download, name="document_download"),
     path("documents/<uuid:public_id>/delete/", views.document_delete, name="document_delete"),
+    path("documents/bulk-delete/", views.document_bulk_delete, name="document_bulk_delete"),
 ]

@@ -270,6 +270,14 @@ h2 {
     background: #7f1d1d;
 }
 
+.select-all-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
 .filter-bar {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr auto;

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Documents · RabiVault{% endblock %}
+
+{% block content %}
+<div class="card">
+    <p class="eyebrow">Confirm delete</p>
+    <h1>Delete {{ documents|length }} document{{ documents|length|pluralize }}?</h1>
+    <p class="page-description">This performs a soft delete. Document records remain for audit and retention history.</p>
+
+    {% if skipped_count %}
+        <p class="page-description">{{ skipped_count }} of the selected item{{ skipped_count|pluralize }} will be skipped (no permission, or already removed).</p>
+    {% endif %}
+
+    <div class="table-wrap" style="margin-top: 1rem;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Document</th>
+                    <th>Facility</th>
+                    <th>Uploaded</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for document in documents %}
+                    <tr>
+                        <td>
+                            {{ document.title }}<br>
+                            <span class="muted">{{ document.original_filename|default:"No filename" }}</span>
+                        </td>
+                        <td>{{ document.facility|default:"Organization-level" }}</td>
+                        <td>{{ document.created_at|date:"M j, Y g:i A" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <form method="post" style="margin-top: 1rem;">
+        {% csrf_token %}
+        <input type="hidden" name="confirm" value="1">
+        {% for document in documents %}
+            <input type="hidden" name="document_ids" value="{{ document.public_id }}">
+        {% endfor %}
+        <div class="actions">
+            <button class="danger" type="submit">Yes, delete {{ documents|length }} document{{ documents|length|pluralize }}</button>
+            <a class="btn secondary" href="{% url 'vault:document_list' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
